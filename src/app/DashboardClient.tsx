@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { FileDown, Plus, Minus, Calculator } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FileDown, Plus, Minus, Calculator, LogIn, LogOut } from 'lucide-react';
 import { calculateAsset, generateEvolutionCurve } from '../utils/finance';
+import { getSession, logout } from '../utils/auth';
 import { DashboardTopLayout } from '../components/DashboardTopLayout';
-import { ModalAdicionar, ModalRemover, ModalSelic } from '../components/Modals';
+import { ModalAdicionar, ModalRemover, ModalSelic, ModalLogin } from '../components/Modals';
 
 const CORES = ["#00bfa5", "#6c63ff", "#f97316", "#3b82f6", "#ec4899", "#14b8a6", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4"];
 
@@ -24,6 +25,13 @@ export default function DashboardClient({ initialData }: { initialData: any[] })
   const [showAdd, setShowAdd] = useState(false);
   const [showRemove, setShowRemove] = useState(false);
   const [showSelic, setShowSelic] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+
+  // Auth (só necessário para adicionar/remover ativos; a leitura é publica)
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  useEffect(() => {
+    setUserEmail(getSession()?.user.email || null);
+  }, []);
 
   // Metrics
   const totalAplicado = data.reduce((acc, obj) => acc + obj.aplicado, 0);
@@ -68,9 +76,20 @@ export default function DashboardClient({ initialData }: { initialData: any[] })
          <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1a1d27', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
            vrsbueno Invest
          </div>
-         <button onClick={() => setShowSelic(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a1d27', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
-           <Calculator size={16} /> Calculadora Selic
-         </button>
+         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+           <button onClick={() => setShowSelic(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a1d27', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
+             <Calculator size={16} /> Calculadora Selic
+           </button>
+           {userEmail ? (
+             <button onClick={() => { logout(); setUserEmail(null); }} title={userEmail} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#1a1d27', border: '1px solid #d1d5db', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
+               <LogOut size={16} /> Sair
+             </button>
+           ) : (
+             <button onClick={() => setShowLogin(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#1a1d27', border: '1px solid #d1d5db', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
+               <LogIn size={16} /> Entrar
+             </button>
+           )}
+         </div>
       </div>
 
       {/* ZONE 1 (LIGHT GRID) */}
@@ -93,14 +112,20 @@ export default function DashboardClient({ initialData }: { initialData: any[] })
                 <FileDown size={22} color="#fff" />
                 <h2 style={{ fontSize: '1.25rem', color: '#fff', fontWeight: 700 }}>Tabela Completa — Renda Fixa</h2>
               </div>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <button onClick={() => setShowAdd(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
-                  <Plus size={18} strokeWidth={3} /> ATIVO
+              {userEmail ? (
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  <button onClick={() => setShowAdd(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
+                    <Plus size={18} strokeWidth={3} /> ATIVO
+                  </button>
+                  <button onClick={() => setShowRemove(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ef4444', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>
+                    <Minus size={18} strokeWidth={3} /> ATIVO
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setShowLogin(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', color: '#8b8fa8', border: '1px solid #323546', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+                  <LogIn size={16} /> Entrar para editar
                 </button>
-                <button onClick={() => setShowRemove(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ef4444', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>
-                  <Minus size={18} strokeWidth={3} /> ATIVO
-                </button>
-              </div>
+              )}
             </div>
             
             <div style={{ overflowX: 'auto', background: '#12141c', padding: '4px' }}>
@@ -147,6 +172,7 @@ export default function DashboardClient({ initialData }: { initialData: any[] })
       {showAdd && <ModalAdicionar onClose={() => setShowAdd(false)} />}
       {showRemove && <ModalRemover onClose={() => setShowRemove(false)} ativos={data} />}
       {showSelic && <ModalSelic onClose={() => setShowSelic(false)} />}
+      {showLogin && <ModalLogin onClose={() => setShowLogin(false)} onSuccess={(email) => setUserEmail(email)} />}
     </div>
   );
 }

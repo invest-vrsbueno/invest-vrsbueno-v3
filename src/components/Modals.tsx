@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { montarTabelaOficial, projetarComTabela, SelicPeriodo } from '../utils/selic';
+import { login } from '../utils/auth';
 
 function formatBRL(val: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(val);
@@ -17,6 +18,51 @@ function parseValorBR(s: string) {
 
 const inputStyle: React.CSSProperties = { width: '100%', padding: '10px', background: '#1f2029', border: '1px solid #323546', color: '#fff', borderRadius: '6px' };
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: '0.75rem', marginBottom: '8px' };
+
+export function ModalLogin({ onClose, onSuccess }: { onClose: () => void; onSuccess: (email: string) => void }) {
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [erro, setErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErro(null);
+    setCarregando(true);
+    const resultado = await login(email, senha);
+    setCarregando(false);
+    if (resultado.ok) {
+      onSuccess(resultado.session.user.email);
+      onClose();
+    } else {
+      setErro(resultado.error);
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+      <form onSubmit={handleSubmit} style={{ background: '#12141c', padding: '24px', borderRadius: '12px', width: '380px', border: '1px solid #323546', color: '#fff' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Entrar</h2>
+          <button type="button" onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.2rem' }}>&times;</button>
+        </div>
+        <p style={{ fontSize: '0.8rem', marginBottom: '16px', color: '#8b8fa8' }}>Login necessário apenas para adicionar ou remover ativos. A visualização do dashboard não exige login.</p>
+        <div style={{ marginBottom: '16px' }}>
+          <label style={labelStyle}>E-mail</label>
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
+        </div>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={labelStyle}>Senha</label>
+          <input type="password" required value={senha} onChange={(e) => setSenha(e.target.value)} style={inputStyle} />
+        </div>
+        {erro && <div style={{ color: '#ef4444', fontSize: '0.8rem', marginBottom: '16px' }}>{erro}</div>}
+        <button type="submit" disabled={carregando} style={{ width: '100%', padding: '12px', background: '#1a1d27', border: '1px solid #323546', color: '#fff', borderRadius: '8px', cursor: carregando ? 'default' : 'pointer', fontWeight: 600, opacity: carregando ? 0.6 : 1 }}>
+          {carregando ? 'Entrando...' : 'Entrar'}
+        </button>
+      </form>
+    </div>
+  );
+}
 
 export function ModalAdicionar({ onClose }: { onClose: () => void }) {
   return (

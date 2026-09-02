@@ -27,8 +27,9 @@ CREATE INDEX idx_investimentos_datas ON investimentos (data_aplicacao, data_venc
 -- O Supabase usa Row Level Security, entao ativaremos (ainda que publico pra comecar localmento)
 ALTER TABLE investimentos ENABLE ROW LEVEL SECURITY;
 
--- Política de leitura anônima (no contexto local)
+-- Leitura publica (dashboard funciona sem login), escrita restrita a quem
+-- estiver autenticado via Supabase Auth (o email gerenciado pelo cliente).
 CREATE POLICY "Leitura anonima" ON investimentos FOR SELECT USING (true);
-CREATE POLICY "Escrita anonima" ON investimentos FOR INSERT WITH CHECK (true);
-CREATE POLICY "Update livre" ON investimentos FOR UPDATE USING (true);
-CREATE POLICY "Deletar livre" ON investimentos FOR DELETE USING (true);
+CREATE POLICY "Escrita autenticada" ON investimentos FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Update autenticado" ON investimentos FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Deletar autenticado" ON investimentos FOR DELETE TO authenticated USING (true);
