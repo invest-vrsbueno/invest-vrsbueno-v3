@@ -1,0 +1,8 @@
+.env
+.env.*
+.tmp/
+tools/
+csv_antigo/
+Referencia/
+*.py
+*.md
