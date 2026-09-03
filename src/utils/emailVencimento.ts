@@ -63,7 +63,7 @@ export async function enviarEmailVencimento(investimentos: InvestimentoVencendo[
   await transporter.sendMail({
     from: EMAIL_SENDER,
     to: EMAIL_RECEIVER.split(',').map((s) => s.trim()),
-    subject: `${isTeste ? '🧪 [TESTE] ' : '⏰ '}Investimentos próximos do vencimento — Investimentos BUD`,
+    subject: `${isTeste ? '🧪 [TESTE] ' : '⏰ '}Investimentos próximos do vencimento — vrsbueno Invest`,
     html: montarHtmlVencimento(investimentos, isTeste),
   });
 }

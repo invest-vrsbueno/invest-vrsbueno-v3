@@ -67,7 +67,7 @@ export async function enviarEmailAlerta(instituicoes: InstituicaoParaEmail[], is
   await transporter.sendMail({
     from: EMAIL_SENDER,
     to: EMAIL_RECEIVER.split(',').map((s) => s.trim()),
-    subject: `${isTeste ? '🧪 [TESTE] ' : '⚠️ '}Cobertura FGC excedida — Investimentos BUD`,
+    subject: `${isTeste ? '🧪 [TESTE] ' : '⚠️ '}Cobertura FGC excedida — vrsbueno Invest`,
     html: montarHtmlAlerta(instituicoes, isTeste),
   });
 }

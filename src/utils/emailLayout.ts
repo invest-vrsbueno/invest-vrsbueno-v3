@@ -24,7 +24,7 @@ export function montarEmailBase({ badgeLabel, badgeBg, badgeColor, titulo, intro
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td style="color:#ffffff;font-size:15px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;font-family:${FONT_STACK};">
-              Investimentos&nbsp;<span style="color:#00bfa5;">BUD</span>
+              vrsbueno&nbsp;<span style="color:#00bfa5;">Invest</span>
             </td>
             <td align="right">
               <span style="display:inline-block;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;background:${badgeBg};color:${badgeColor};white-space:nowrap;font-family:${FONT_STACK};">
@@ -50,7 +50,7 @@ export function montarEmailBase({ badgeLabel, badgeBg, badgeColor, titulo, intro
     </tr>
     <tr>
       <td style="background:#f9fafb;border-radius:0 0 14px 14px;padding:16px 28px;border:1px solid #e2e4f0;border-top:1px solid #f0f1f4;">
-        <p style="margin:0;font-size:11px;color:#8b8fa8;font-family:${FONT_STACK};">Alerta automático · Dashboard Investimentos BUD</p>
+        <p style="margin:0;font-size:11px;color:#8b8fa8;font-family:${FONT_STACK};">Alerta automático · Dashboard vrsbueno Invest</p>
       </td>
     </tr>
   </table>

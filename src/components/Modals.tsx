@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { montarTabelaOficial, projetarComTabela, SelicPeriodo } from '../utils/selic';
+import { Download, Mail } from 'lucide-react';
+import { montarTabelaOficial, projetarComTabela } from '../utils/selic';
+import { gerarPdfSelic } from '../utils/pdfSelic';
 
 function formatBRL(val: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 }).format(val);
@@ -18,77 +20,11 @@ function parseValorBR(s: string) {
 const inputStyle: React.CSSProperties = { width: '100%', padding: '10px', background: '#1f2029', border: '1px solid #323546', color: '#fff', borderRadius: '6px' };
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: '0.75rem', marginBottom: '8px' };
 
-export function ModalAdicionar({ onClose }: { onClose: () => void }) {
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-      <div style={{ background: '#12141c', padding: '24px', borderRadius: '12px', width: '500px', border: '1px solid #323546', color: '#fff' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Adicionar Ativo</h2>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.2rem' }}>&times;</button>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-          <div><label style={{display:'block', fontSize:'0.75rem', marginBottom:'8px'}}>Tipo</label>
-               <select style={{width:'100%', padding:'10px', background:'#1f2029', border:'1px solid #323546', color:'#fff', borderRadius:'6px'}}><option>CDB</option></select>
-          </div>
-          <div><label style={{display:'block', fontSize:'0.75rem', marginBottom:'8px'}}>Instituição</label>
-               <input placeholder="Ex: DAYCOVAL" style={{width:'100%', padding:'10px', background:'#1f2029', border:'1px solid #323546', color:'#fff', borderRadius:'6px'}}/>
-          </div>
-          <div><label style={{display:'block', fontSize:'0.75rem', marginBottom:'8px'}}>Indexador</label>
-               <select style={{width:'100%', padding:'10px', background:'#1f2029', border:'1px solid #323546', color:'#fff', borderRadius:'6px'}}><option>Pré-Fixado</option></select>
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 1fr', gap: '16px', marginBottom: '16px' }}>
-          <div><label style={{display:'block', fontSize:'0.75rem', marginBottom:'8px'}}>Taxa (%)</label>
-               <input defaultValue="14,00" style={{width:'100%', padding:'10px', background:'#1f2029', border:'1px solid #323546', color:'#fff', borderRadius:'6px', textAlign:'center'}}/>
-          </div>
-          <div><label style={{display:'block', fontSize:'0.75rem', marginBottom:'8px'}}>Valor Aplicado (R$)</label>
-               <input defaultValue="1000,00" style={{width:'100%', padding:'10px', background:'#1f2029', border:'1px solid #323546', color:'#fff', borderRadius:'6px', textAlign:'center'}}/>
-          </div>
-          <div><label style={{display:'block', fontSize:'0.75rem', marginBottom:'8px'}}>Corretora</label>
-               <input placeholder="Ex: XP" style={{width:'100%', padding:'10px', background:'#1f2029', border:'1px solid #323546', color:'#fff', borderRadius:'6px'}}/>
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-          <div><label style={{display:'block', fontSize:'0.75rem', marginBottom:'8px'}}>Data de Aplicação</label>
-               <input defaultValue="01/09/2026" style={{width:'100%', padding:'10px', background:'#1f2029', border:'1px solid #323546', color:'#fff', borderRadius:'6px'}}/>
-          </div>
-          <div><label style={{display:'block', fontSize:'0.75rem', marginBottom:'8px'}}>Data de Vencimento</label>
-               <input defaultValue="01/09/2027" style={{width:'100%', padding:'10px', background:'#1f2029', border:'1px solid #323546', color:'#fff', borderRadius:'6px'}}/>
-          </div>
-        </div>
-        <button style={{ width: '100%', padding: '12px', background: '#1a1d27', border: '1px solid #323546', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Atualizar Ativos</button>
-      </div>
-    </div>
-  );
-}
-
-export function ModalRemover({ onClose, ativos }: { onClose: () => void, ativos: any[] }) {
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-      <div style={{ background: '#12141c', padding: '24px', borderRadius: '12px', width: '500px', border: '1px solid #323546', color: '#e2e4f0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: 600, color: '#fff' }}>Remover Ativo</h2>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.2rem' }}>&times;</button>
-        </div>
-        <p style={{ fontSize: '0.85rem', marginBottom: '24px', lineHeight: 1.5 }}>Selecione o ativo que deseja remover. <strong>Esta ação excluirá a linha completa no Supabase/Database.</strong></p>
-        
-        <label style={{display:'block', fontSize:'0.85rem', marginBottom:'8px'}}>Selecione o ativo:</label>
-        <select style={{width:'100%', padding:'12px', background:'#1f2029', border:'1px solid #323546', color:'#fff', borderRadius:'6px', marginBottom:'24px', fontSize: '0.85rem'}}>
-          {ativos.map(a => <option key={a.id}>{a.emissor}</option>)}
-        </select>
-        
-        <button style={{ width: '100%', padding: '14px', background: '#ef4444', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>Confirmar Remoção</button>
-      </div>
-    </div>
-  );
-}
-
 export function ModalSelic({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [atual, setAtual] = useState<{ data: string; valor: number } | null>(null);
   const [projecoesFocus, setProjecoesFocus] = useState<{ ano: number; mediana: number }[]>([]);
-  const [tranchesManuais, setTranchesManuais] = useState<SelicPeriodo[]>([]);
 
   const hoje = new Date().toISOString().slice(0, 10);
   const [valorProjetado, setValorProjetado] = useState('10000,00');
@@ -99,9 +35,8 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
     return d.toISOString().slice(0, 10);
   });
 
-  const [novaInicio, setNovaInicio] = useState('');
-  const [novaFim, setNovaFim] = useState('');
-  const [novaTaxa, setNovaTaxa] = useState('');
+  const [enviandoEmail, setEnviandoEmail] = useState(false);
+  const [statusEmail, setStatusEmail] = useState<'ok' | 'erro' | null>(null);
 
   useEffect(() => {
     fetch('/api/selic')
@@ -116,17 +51,31 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
   }, []);
 
   const tabelaOficial = useMemo(() => montarTabelaOficial(atual, projecoesFocus), [atual, projecoesFocus]);
-  const tabelaCompleta = useMemo(() => [...tabelaOficial, ...tranchesManuais], [tabelaOficial, tranchesManuais]);
 
   const resultado = useMemo(() => {
-    if (!dataInicio || !dataFinal || tabelaCompleta.length === 0) return null;
-    return projetarComTabela(parseValorBR(valorProjetado), dataInicio, dataFinal, tabelaCompleta);
-  }, [valorProjetado, dataInicio, dataFinal, tabelaCompleta]);
+    if (!dataInicio || !dataFinal || tabelaOficial.length === 0) return null;
+    return projetarComTabela(parseValorBR(valorProjetado), dataInicio, dataFinal, tabelaOficial);
+  }, [valorProjetado, dataInicio, dataFinal, tabelaOficial]);
 
-  function adicionarTranche() {
-    if (!novaInicio || !novaFim || !novaTaxa) return;
-    setTranchesManuais((prev) => [...prev, { inicio: novaInicio, fim: novaFim, taxa: parseValorBR(novaTaxa), origem: 'Manual' }]);
-    setNovaInicio(''); setNovaFim(''); setNovaTaxa('');
+  function baixarPdf() {
+    gerarPdfSelic({ atual, valorProjetado: parseValorBR(valorProjetado), dataInicio, dataFinal, resultado, tabelaOficial });
+  }
+
+  async function enviarPorEmail() {
+    setEnviandoEmail(true);
+    setStatusEmail(null);
+    try {
+      const res = await fetch('/api/selic/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ atual, valorProjetado: parseValorBR(valorProjetado), dataInicio, dataFinal, resultado, tabelaOficial }),
+      });
+      setStatusEmail(res.ok ? 'ok' : 'erro');
+    } catch {
+      setStatusEmail('erro');
+    } finally {
+      setEnviandoEmail(false);
+    }
   }
 
   return (
@@ -170,16 +119,16 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
                 <span style={{ color: '#ef4444', fontSize: '1.2rem' }}>!</span>
                 <span style={{ color: '#ef4444', fontSize: '0.85rem' }}>
                   Infelizmente não é possível projetar até {formatDataBR(dataFinal)} pois essa data vai além do que o Banco Central/Focus já projeta
-                  {resultado.dataCobertaAte ? ` (cobertura automática vai até ${formatDataBR(resultado.dataCobertaAte)})` : ''}. Adicione uma tranche manual abaixo para estender a projeção.
+                  {resultado.dataCobertaAte ? ` (cobertura automática vai até ${formatDataBR(resultado.dataCobertaAte)})` : ''}. Escolha uma data final dentro do período coberto.
                 </span>
               </div>
             )}
 
             {resultado && !resultado.gapDetectado && (
-              <div style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.35)', borderRadius: '8px', padding: '16px', marginBottom: '24px' }}>
-                <div style={{ fontSize: '0.85rem', color: '#e2e4f0' }}>Valor projetado em {formatDataBR(dataFinal)}:</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#10b981' }}>{formatBRL(resultado.valorFinal)}</div>
-                <div style={{ fontSize: '0.8rem', color: '#8b8fa8' }}>Rendimento estimado: {formatBRL(resultado.rendimento)}</div>
+              <div style={{ background: '#10b981', borderRadius: '10px', padding: '18px 20px', marginBottom: '24px' }}>
+                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.85)' }}>Valor projetado em {formatDataBR(dataFinal)}:</div>
+                <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#fff' }}>{formatBRL(resultado.valorFinal)}</div>
+                <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.8)' }}>Rendimento estimado: {formatBRL(resultado.rendimento)}</div>
               </div>
             )}
 
@@ -197,7 +146,7 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {tabelaCompleta.map((p, i) => (
+                  {tabelaOficial.map((p, i) => (
                     <tr key={i} style={{ borderTop: '1px solid #23253b', color: '#e2e4f0' }}>
                       <td style={{ padding: '8px 16px' }}>{formatDataBR(p.inicio)}</td>
                       <td style={{ padding: '8px 16px' }}>{formatDataBR(p.fim)}</td>
@@ -209,24 +158,15 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
               </table>
             </div>
 
-            <div style={{ border: '1px solid #323546', borderRadius: '8px', overflow: 'hidden' }}>
-              <div style={{ padding: '16px', background: '#1c1e28', borderBottom: '1px solid #323546', fontSize: '0.85rem', fontWeight: 500 }}>
-                 + Inserir Nova Tranche Meta Selic
-              </div>
-              <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', alignItems: 'end' }}>
-                <div><label style={labelStyle}>Data Inicial</label>
-                     <input type="date" value={novaInicio} onChange={(e) => setNovaInicio(e.target.value)} style={inputStyle} />
-                </div>
-                <div><label style={labelStyle}>Data Final</label>
-                     <input type="date" value={novaFim} onChange={(e) => setNovaFim(e.target.value)} style={inputStyle} />
-                </div>
-                <div><label style={labelStyle}>Nova Taxa Selic (% a.a.)</label>
-                     <input value={novaTaxa} onChange={(e) => setNovaTaxa(e.target.value)} placeholder="10,50" style={inputStyle} />
-                </div>
-              </div>
-              <div style={{ padding: '0 24px 24px' }}>
-                <button onClick={adicionarTranche} style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>+ Adicionar Projeção à Tabela Oficial do BC</button>
-              </div>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <button onClick={baixarPdf} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a1d27', color: '#fff', border: '1px solid #323546', padding: '11px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+                <Download size={16} /> Download PDF
+              </button>
+              <button onClick={enviarPorEmail} disabled={enviandoEmail} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#3b82f6', color: '#fff', border: 'none', padding: '11px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: enviandoEmail ? 'default' : 'pointer', opacity: enviandoEmail ? 0.6 : 1 }}>
+                <Mail size={16} /> {enviandoEmail ? 'Enviando...' : 'Enviar por e-mail'}
+              </button>
+              {statusEmail === 'ok' && <span style={{ color: '#10b981', fontSize: '0.8rem' }}>E-mail enviado.</span>}
+              {statusEmail === 'erro' && <span style={{ color: '#ef4444', fontSize: '0.8rem' }}>Falha ao enviar. Tente novamente.</span>}
             </div>
           </>
         )}

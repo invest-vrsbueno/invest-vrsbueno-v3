@@ -80,7 +80,7 @@ export default function LoginForm({ nextPath }: { nextPath: string }) {
       onSubmit={etapa === 'credenciais' ? handleSubmitCredenciais : handleSubmitMfa}
       style={{ background: '#12141c', padding: '32px', borderRadius: '12px', width: '380px', border: '1px solid #323546', color: '#fff' }}
     >
-      <h1 style={{ fontSize: '1.3rem', fontWeight: 600, marginBottom: '4px' }}>Investimentos BUD</h1>
+      <h1 style={{ fontSize: '1.3rem', fontWeight: 600, marginBottom: '4px' }}>vrsbueno Invest</h1>
       <p style={{ fontSize: '0.8rem', marginBottom: '24px', color: '#8b8fa8' }}>
         {etapa === 'credenciais' ? 'Entre com sua conta para acessar o dashboard.' : 'Digite o código do seu aplicativo autenticador.'}
       </p>

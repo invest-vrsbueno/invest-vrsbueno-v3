@@ -2,13 +2,13 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileDown, Plus, Minus, Calculator, LogOut, ShieldCheck } from 'lucide-react';
+import { Calculator, LogOut, ShieldCheck, Pencil } from 'lucide-react';
 import { calculateAsset, generateEvolutionCurve } from '../utils/finance';
 import { createClient } from '../utils/supabase/client';
 import { agruparPorInstituicaoFGC, LIMIT_FGC } from '../utils/fgc';
 import { investimentosPorVencimento } from '../utils/vencimento';
 import { DashboardTopLayout } from '../components/DashboardTopLayout';
-import { ModalAdicionar, ModalRemover, ModalSelic } from '../components/Modals';
+import { ModalSelic } from '../components/Modals';
 import { Mfa2FAAlert } from '../components/Mfa2FAAlert';
 
 const CORES = ["#00bfa5", "#6c63ff", "#f97316", "#3b82f6", "#ec4899", "#14b8a6", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4"];
@@ -28,8 +28,6 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
   }, [initialData]);
 
   // Modals State
-  const [showAdd, setShowAdd] = useState(false);
-  const [showRemove, setShowRemove] = useState(false);
   const [showSelic, setShowSelic] = useState(false);
 
   async function handleLogout() {
@@ -78,24 +76,46 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
     return generateEvolutionCurve(data, startDate, endDate);
   }, [data]);
 
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
     <div className="fade-in">
       {/* HEADER NOVO */}
-      <div style={{ padding: '0 24px', background: '#e9ebf0', borderBottom: '1px solid #d1d5db', display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '60px' }}>
-         <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1a1d27', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-           vrsbueno Invest
-         </div>
-         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-           <button onClick={() => setShowSelic(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a1d27', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
-             <Calculator size={16} /> Calculadora Selic
-           </button>
-           <a href="/settings" title="Segurança da conta" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1a1d27', border: '1px solid #d1d5db', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, textDecoration: 'none' }}>
-             <ShieldCheck size={16} /> Segurança
-           </a>
-           <button onClick={handleLogout} title={userEmail} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#1a1d27', border: '1px solid #d1d5db', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
-             <LogOut size={16} /> Sair
-           </button>
-         </div>
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          margin: '24px',
+          background: scrolled ? 'rgba(18,20,28,0.8)' : '#12141c',
+          backdropFilter: scrolled ? 'blur(10px)' : 'none',
+          WebkitBackdropFilter: scrolled ? 'blur(10px)' : 'none',
+          borderRadius: '14px',
+          padding: scrolled ? '10px 28px' : '18px 28px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          boxShadow: scrolled ? '0 8px 24px rgba(0,0,0,0.25)' : 'none',
+          transition: 'background 0.25s ease, padding 0.25s ease, box-shadow 0.25s ease, backdrop-filter 0.25s ease',
+        }}
+      >
+        <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.25rem', letterSpacing: '0.01em' }}>
+          <span style={{ fontWeight: 700, color: '#fff' }}>VRSBUENO</span>{' '}
+          <span style={{ fontWeight: 700, color: '#00bfa5' }}>INVEST</span>{' '}
+          <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.55)' }}>— Dashboard</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={() => setShowSelic(true)} style={{ height: '38px', boxSizing: 'border-box', background: '#1f2029', color: '#fff', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Calculadora Selic</button>
+          <a href="/editar-ativos" style={{ height: '38px', boxSizing: 'border-box', background: '#3b82f6', color: '#fff', border: 'none', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Editar Ativos</a>
+          <a href="/settings" title="Segurança da conta" style={{ height: '38px', boxSizing: 'border-box', background: 'transparent', color: '#e2e4f0', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Segurança</a>
+          <button onClick={handleLogout} title={userEmail} style={{ height: '38px', boxSizing: 'border-box', background: 'transparent', color: '#e2e4f0', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Sair</button>
+        </div>
       </div>
 
       {/* ZONE 1 (LIGHT GRID) */}
@@ -109,69 +129,6 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
         investimentosVencendo={investimentosVencendo}
       />
 
-      {/* ZONE 2 - DARK Theme */}
-      <div className="dark-zone">
-        <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
-          
-          <div className="dark-card" style={{ background: '#14151a', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
-            <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #23253b', background: '#1b1d27' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <FileDown size={22} color="#fff" />
-                <h2 style={{ fontSize: '1.25rem', color: '#fff', fontWeight: 700 }}>Tabela Completa — Renda Fixa</h2>
-              </div>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <button onClick={() => setShowAdd(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
-                  <Plus size={18} strokeWidth={3} /> ATIVO
-                </button>
-                <button onClick={() => setShowRemove(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ef4444', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>
-                  <Minus size={18} strokeWidth={3} /> ATIVO
-                </button>
-              </div>
-            </div>
-            
-            <div style={{ overflowX: 'auto', background: '#12141c', padding: '4px' }}>
-              <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1100px' }}>
-                <thead>
-                  <tr>
-                    <th style={{ color: '#8b8fa8' }}>Ativo</th>
-                    <th style={{ color: '#8b8fa8' }}>Tipo</th>
-                    <th style={{ color: '#8b8fa8' }}>Instituição</th>
-                    <th style={{ color: '#8b8fa8' }}>Indexador</th>
-                    <th style={{ color: '#8b8fa8' }}>Taxa</th>
-                    <th style={{ color: '#8b8fa8' }}>Aplicado</th>
-                    <th style={{ color: '#8b8fa8' }}>Posição Hoje</th>
-                    <th style={{ color: '#8b8fa8' }}>Rend. Acum.</th>
-                    <th style={{ color: '#8b8fa8' }}>Proj. Venc.</th>
-                    <th style={{ color: '#8b8fa8' }}>Aplicação</th>
-                    <th style={{ color: '#8b8fa8' }}>Vencimento</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.map(item => (
-                    <tr key={item.id}>
-                      <td style={{ color: '#e2e4f0' }}>{item.emissor}</td>
-                      <td style={{ color: '#e2e4f0' }}>{item.tipo}</td>
-                      <td style={{ color: '#e2e4f0' }}>{item.instituicao_agrupadora}</td>
-                      <td style={{ color: '#e2e4f0' }}>{item.indexador_tipo}</td>
-                      <td style={{ color: '#e2e4f0' }}>{item.taxa}%</td>
-                      <td style={{ color: '#e2e4f0' }}>{formatBRL(item.aplicado)}</td>
-                      <td style={{ color: '#e2e4f0' }}>{formatBRL(item.posicaoHoje)}</td>
-                      <td style={{ color: '#e2e4f0' }}>{formatBRL(item.rendimentoAcumulado)}</td>
-                      <td style={{ color: '#e2e4f0' }}>{formatBRL(item.projetadoVencimento)}</td>
-                      <td style={{ color: '#8b8fa8' }}>{new Date(item.data_aplicacao).toLocaleDateString('pt-BR')}</td>
-                      <td style={{ color: '#8b8fa8' }}>{item.data_vencimento ? new Date(item.data_vencimento).toLocaleDateString('pt-BR') : 'None'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          
-        </div>
-      </div>
-
-      {showAdd && <ModalAdicionar onClose={() => setShowAdd(false)} />}
-      {showRemove && <ModalRemover onClose={() => setShowRemove(false)} ativos={data} />}
       {showSelic && <ModalSelic onClose={() => setShowSelic(false)} />}
       <Mfa2FAAlert />
     </div>
