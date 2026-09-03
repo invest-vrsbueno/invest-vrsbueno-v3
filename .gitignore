@@ -39,6 +39,9 @@ yarn-error.log*
 # scratch/temp exports (dumps de dados pessoais/intermediarios)
 .tmp/
 
+# credenciais SMTP em texto puro (nunca commitar)
+config_email.txt
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

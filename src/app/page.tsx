@@ -1,4 +1,6 @@
+import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient';
+import { createClient } from '../utils/supabase/server';
 
 async function getInvestimentos() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -26,10 +28,19 @@ async function getInvestimentos() {
 }
 
 export default async function DashboardPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
   const rawInvestimentos = await getInvestimentos();
   return (
     <div style={{ width: '100vw', minHeight: '100vh' }}>
-      <DashboardClient initialData={rawInvestimentos} />
+      <DashboardClient initialData={rawInvestimentos} userEmail={user.email!} />
     </div>
   );
 }

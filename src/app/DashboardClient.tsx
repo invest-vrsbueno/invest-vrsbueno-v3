@@ -1,11 +1,15 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { FileDown, Plus, Minus, Calculator, LogIn, LogOut } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { FileDown, Plus, Minus, Calculator, LogOut, ShieldCheck } from 'lucide-react';
 import { calculateAsset, generateEvolutionCurve } from '../utils/finance';
-import { getSession, logout } from '../utils/auth';
+import { createClient } from '../utils/supabase/client';
+import { agruparPorInstituicaoFGC, LIMIT_FGC } from '../utils/fgc';
+import { investimentosPorVencimento } from '../utils/vencimento';
 import { DashboardTopLayout } from '../components/DashboardTopLayout';
-import { ModalAdicionar, ModalRemover, ModalSelic, ModalLogin } from '../components/Modals';
+import { ModalAdicionar, ModalRemover, ModalSelic } from '../components/Modals';
+import { Mfa2FAAlert } from '../components/Mfa2FAAlert';
 
 const CORES = ["#00bfa5", "#6c63ff", "#f97316", "#3b82f6", "#ec4899", "#14b8a6", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4"];
 
@@ -13,9 +17,11 @@ function formatBRL(val: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
 }
 
-export default function DashboardClient({ initialData }: { initialData: any[] }) {
+export default function DashboardClient({ initialData, userEmail }: { initialData: any[]; userEmail: string }) {
   const TODAY = new Date();
-  
+  const router = useRouter();
+  const supabase = createClient();
+
   // Data Enriching
   const data = useMemo(() => {
     return initialData.map(item => calculateAsset(item, TODAY));
@@ -25,13 +31,12 @@ export default function DashboardClient({ initialData }: { initialData: any[] })
   const [showAdd, setShowAdd] = useState(false);
   const [showRemove, setShowRemove] = useState(false);
   const [showSelic, setShowSelic] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
 
-  // Auth (só necessário para adicionar/remover ativos; a leitura é publica)
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  useEffect(() => {
-    setUserEmail(getSession()?.user.email || null);
-  }, []);
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  }
 
   // Metrics
   const totalAplicado = data.reduce((acc, obj) => acc + obj.aplicado, 0);
@@ -40,17 +45,21 @@ export default function DashboardClient({ initialData }: { initialData: any[] })
   const projVencimento = data.reduce((acc, obj) => acc + obj.projetadoVencimento, 0);
   const saldoCaixaMock = 101750;
 
-  const agrupaFGC = data.reduce((acc: any, obj) => {
-    const inst = obj.instituicao_agrupadora;
-    if (!acc[inst]) acc[inst] = 0;
-    acc[inst] += obj.posicaoHoje;
-    return acc;
-  }, {});
-  
-  const byInstArray = Object.keys(agrupaFGC).map(k => ({ name: k, value: agrupaFGC[k] })).sort((a,b)=>b.value - a.value);
-  let instComRisco = 0;
-  const LIMIT_FGC = 250000;
-  byInstArray.forEach(i => { if (i.value >= LIMIT_FGC) instComRisco++; });
+  const byInstArray = useMemo(() => agruparPorInstituicaoFGC(data), [data]);
+  const instComRisco = byInstArray.filter(i => i.value >= LIMIT_FGC).length;
+
+  const investimentosVencendo = useMemo(() => investimentosPorVencimento(data, TODAY), [data]);
+
+  // Dispara a checagem dos alertas (FGC e vencimento) uma vez após os dados carregarem.
+  // O controle de reenvio (24h corridas desde o último envio) fica no banco,
+  // então mesmo múltiplas visitas/abas não geram e-mails duplicados.
+  const alertaDisparado = useRef(false);
+  useEffect(() => {
+    if (alertaDisparado.current || data.length === 0) return;
+    alertaDisparado.current = true;
+    fetch('/api/alertas-fgc', { method: 'POST' }).catch(() => {});
+    fetch('/api/alertas-vencimento', { method: 'POST' }).catch(() => {});
+  }, [data]);
 
   const byYear = data.reduce((acc: any, obj) => {
     const y = obj.anoVencimento || 2026;
@@ -80,15 +89,12 @@ export default function DashboardClient({ initialData }: { initialData: any[] })
            <button onClick={() => setShowSelic(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a1d27', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
              <Calculator size={16} /> Calculadora Selic
            </button>
-           {userEmail ? (
-             <button onClick={() => { logout(); setUserEmail(null); }} title={userEmail} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#1a1d27', border: '1px solid #d1d5db', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
-               <LogOut size={16} /> Sair
-             </button>
-           ) : (
-             <button onClick={() => setShowLogin(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#1a1d27', border: '1px solid #d1d5db', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
-               <LogIn size={16} /> Entrar
-             </button>
-           )}
+           <a href="/settings" title="Segurança da conta" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1a1d27', border: '1px solid #d1d5db', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, textDecoration: 'none' }}>
+             <ShieldCheck size={16} /> Segurança
+           </a>
+           <button onClick={handleLogout} title={userEmail} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#1a1d27', border: '1px solid #d1d5db', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>
+             <LogOut size={16} /> Sair
+           </button>
          </div>
       </div>
 
@@ -100,6 +106,7 @@ export default function DashboardClient({ initialData }: { initialData: any[] })
         formatBRL={formatBRL} CORES={CORES}
         evolutionData={evolutionData} byInstArray={byInstArray}
         barData={barData} LIMIT_FGC={LIMIT_FGC}
+        investimentosVencendo={investimentosVencendo}
       />
 
       {/* ZONE 2 - DARK Theme */}
@@ -112,20 +119,14 @@ export default function DashboardClient({ initialData }: { initialData: any[] })
                 <FileDown size={22} color="#fff" />
                 <h2 style={{ fontSize: '1.25rem', color: '#fff', fontWeight: 700 }}>Tabela Completa — Renda Fixa</h2>
               </div>
-              {userEmail ? (
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <button onClick={() => setShowAdd(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
-                    <Plus size={18} strokeWidth={3} /> ATIVO
-                  </button>
-                  <button onClick={() => setShowRemove(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ef4444', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>
-                    <Minus size={18} strokeWidth={3} /> ATIVO
-                  </button>
-                </div>
-              ) : (
-                <button onClick={() => setShowLogin(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', color: '#8b8fa8', border: '1px solid #323546', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
-                  <LogIn size={16} /> Entrar para editar
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <button onClick={() => setShowAdd(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
+                  <Plus size={18} strokeWidth={3} /> ATIVO
                 </button>
-              )}
+                <button onClick={() => setShowRemove(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#ef4444', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>
+                  <Minus size={18} strokeWidth={3} /> ATIVO
+                </button>
+              </div>
             </div>
             
             <div style={{ overflowX: 'auto', background: '#12141c', padding: '4px' }}>
@@ -172,7 +173,7 @@ export default function DashboardClient({ initialData }: { initialData: any[] })
       {showAdd && <ModalAdicionar onClose={() => setShowAdd(false)} />}
       {showRemove && <ModalRemover onClose={() => setShowRemove(false)} ativos={data} />}
       {showSelic && <ModalSelic onClose={() => setShowSelic(false)} />}
-      {showLogin && <ModalLogin onClose={() => setShowLogin(false)} onSuccess={(email) => setUserEmail(email)} />}
+      <Mfa2FAAlert />
     </div>
   );
 }

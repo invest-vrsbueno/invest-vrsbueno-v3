@@ -1,15 +1,19 @@
 'use client';
 import React from 'react';
 import { ResponsiveGridLayout } from 'react-grid-layout';
-import { Lock, FileText, BarChart3, Settings2 } from 'lucide-react';
+import { Lock, FileText, BarChart3, Settings2, X } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell, BarChart, Bar, Legend, ComposedChart, Line } from 'recharts';
+import { FgcDetalhe } from './FgcDetalhe';
+import { InvestimentosAVencer } from './InvestimentosAVencer';
+import { ResumoAnualChart } from './ResumoAnualChart';
 
-export function DashboardTopLayout({ 
-  patrimonioTotal, totalAplicado, rendAcumulado, projVencimento, 
+export function DashboardTopLayout({
+  patrimonioTotal, totalAplicado, rendAcumulado, projVencimento,
   saldoCaixaMock, instComRisco, formatBRL, CORES,
-  evolutionData, byInstArray, barData, LIMIT_FGC 
+  evolutionData, byInstArray, barData, LIMIT_FGC, investimentosVencendo
 }: any) {
   const [width, setWidth] = React.useState(1200);
+  const [showFgcModal, setShowFgcModal] = React.useState(false);
   React.useEffect(() => {
     setWidth(window.innerWidth > 1440 ? 1440 : window.innerWidth);
     const cb = () => setWidth(window.innerWidth > 1440 ? 1440 : window.innerWidth);
@@ -28,11 +32,10 @@ export function DashboardTopLayout({
     { i: 'chartArea', x: 0, y: 4, w: 8, h: 10 },
     { i: 'chartPie', x: 8, y: 4, w: 4, h: 10 },
     
-    { i: 'chartBar', x: 0, y: 14, w: 8, h: 10 },
-    { i: 'saldoList', x: 8, y: 14, w: 4, h: 10 },
+    { i: 'chartBar', x: 0, y: 14, w: 8, h: 13 },
+    { i: 'saldoList', x: 8, y: 14, w: 4, h: 13 },
 
-    { i: 'chartFGC', x: 0, y: 24, w: 8, h: 12 },
-    { i: 'distList', x: 8, y: 24, w: 4, h: 12 }
+    { i: 'distList', x: 0, y: 27, w: 12, h: 10 }
   ];
 
   return (
@@ -72,9 +75,18 @@ export function DashboardTopLayout({
           <div style={{ padding: '12px 18px' }}><div className="text-value-large">{formatBRL(saldoCaixaMock)}</div><div className="kpi-subtitle">Liquidez imediata</div><div style={{ marginTop: '12px' }}><span className="badge-pill badge-blue">🏦 disponível</span></div></div>
         </div>
 
-        <div key="kpi6" className="grid-card">
+        <div key="kpi6" className="grid-card" onClick={() => setShowFgcModal(true)} style={{ cursor: 'pointer' }} title="Clique para ver o detalhamento por instituição">
           <div className="grid-card-header"><span className="grid-card-title">Cobertura FGC</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div></div>
-          <div style={{ padding: '12px 18px' }}><div className="text-value-large">{instComRisco} banco{(instComRisco > 1 || instComRisco === 0) ? 's': ''}</div><div className="kpi-subtitle">Acima do Limite de Proteção</div><div style={{ marginTop: '12px' }}><span className={`badge-pill ${instComRisco > 0 ? 'badge-red' : 'badge-teal'}`}>{instComRisco > 0 ? '⚠️ Risco Ativo' : '✅ Protegido'}</span></div></div>
+          <div style={{ padding: '12px 18px' }}>
+            <div className="text-value-large">{instComRisco} banco{(instComRisco > 1 || instComRisco === 0) ? 's': ''}</div>
+            <div className="kpi-subtitle">Acima do Limite de Proteção</div>
+            <div style={{ marginTop: '12px' }}><span className={`badge-pill ${instComRisco > 0 ? 'badge-red' : 'badge-teal'}`}>{instComRisco > 0 ? '⚠️ Risco Ativo' : '✅ Protegido'}</span></div>
+            {instComRisco > 0 && (
+              <div style={{ marginTop: '10px', fontSize: '0.7rem', color: '#ef4444', lineHeight: 1.4 }}>
+                {byInstArray.filter((i: any) => i.value >= LIMIT_FGC).map((i: any) => i.name).join(', ')}
+              </div>
+            )}
+          </div>
         </div>
 
         <div key="chartArea" className="grid-card" style={{ display: 'flex' }}>
@@ -109,59 +121,12 @@ export function DashboardTopLayout({
 
         <div key="chartBar" className="grid-card" style={{ overflow: 'auto' }}>
           <div className="grid-card-header"><span className="grid-card-title">RESUMO ANUAL — VENCIMENTO VS. GERADO</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
-          <div style={{ padding: '20px 20px 0 0', height: '180px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData} barGap={0} barSize={28}>
-                <XAxis dataKey="name" tick={{fontSize: 11, fill: '#8b8fa8'}} axisLine={{stroke: '#e2e4f0'}} tickLine={false} />
-                <Tooltip cursor={{fill: 'transparent'}} formatter={(val: any) => formatBRL(Number(val))} />
-                <Bar dataKey="vence" fill="#00bfa5" radius={[2,2,0,0]} name="Vence no Ano" />
-                <Bar dataKey="gerado" fill="#6c63ff" radius={[2,2,0,0]} name="Gerado no Ano" />
-                <Legend iconType="square" wrapperStyle={{ fontSize: 10, paddingTop: 10 }} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div style={{ padding: '0 20px 20px', fontSize: '0.8rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e4f0', padding: '6px 0', color: '#8b8fa8' }}>
-               <span>Ano</span> <span>Vence (Principal + Rend)</span> <span>Gerado no Ano</span>
-            </div>
-            {barData.map((y: any) => (
-              <div key={y.name} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e2e4f0', padding: '8px 0', fontWeight: 500 }}>
-                 <span style={{ color: '#00bfa5', fontWeight: 600 }}>{y.name}</span>
-                 <span>{formatBRL(y.vence)}</span>
-                 <span>{formatBRL(y.gerado)}</span>
-              </div>
-            ))}
-          </div>
+          <ResumoAnualChart barData={barData} formatBRL={formatBRL} />
         </div>
 
         <div key="saldoList" className="grid-card">
-           <div className="grid-card-header"><span className="grid-card-title">SALDO / CAIXA</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
-          <div style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #e2e4f0', fontSize: '0.85rem' }}><b style={{ color: '#5a5d7a' }}>SALDO MP</b> <b>R$ 12</b></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #e2e4f0', fontSize: '0.85rem' }}><b style={{ color: '#5a5d7a' }}>RM MERCADO PAGO</b> <b>R$ 20.276</b></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #e2e4f0', fontSize: '0.85rem' }}><b style={{ color: '#5a5d7a' }}>SALDO XP</b> <b>R$ 0</b></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #e2e4f0', fontSize: '0.85rem' }}><span style={{ color: '#5a5d7a', textTransform: 'uppercase' }}>fgts</span> <b>R$ 74.730</b></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', fontSize: '0.85rem' }}><b style={{ color: '#00bfa5' }}>Total:</b> <b style={{ color: '#00bfa5' }}>{formatBRL(saldoCaixaMock)}</b></div>
-          </div>
-        </div>
-
-        <div key="chartFGC" className="grid-card" style={{ display: 'flex' }}>
-          <div className="grid-card-header"><span className="grid-card-title">COBERTURA FGC POR INSTITUIÇÃO</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
-          <div style={{ flex: 1, padding: '20px 20px 10px 0', minHeight: 0 }}>
-             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={byInstArray} layout="vertical" barSize={16}>
-                <XAxis type="number" tickFormatter={(v)=>`${v/1000}k`} tick={{fontSize:10, fill:'#8b8fa8'}} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" tick={{fontSize:9, fill:'#1a1d27', fontWeight: 600}} axisLine={false} tickLine={false} width={80} />
-                <Tooltip formatter={(value: any) => formatBRL(Number(value))} cursor={{fill: 'rgba(0,0,0,0.02)'}} />
-                <ReferenceLine x={LIMIT_FGC} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Limite FGC', fill: '#ef4444', fontSize: 9 }} />
-                <Bar dataKey="value">
-                  {byInstArray.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={entry.value >= LIMIT_FGC ? '#ef4444' : '#00bfa5'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+           <div className="grid-card-header"><span className="grid-card-title">INVESTIMENTOS A VENCER</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
+          <InvestimentosAVencer investimentos={investimentosVencendo} />
         </div>
 
         <div key="distList" className="grid-card">
@@ -185,6 +150,33 @@ export function DashboardTopLayout({
         </div>
 
       </ResponsiveGridLayout>
+
+      {showFgcModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setShowFgcModal(false)}>
+          <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: '640px', maxHeight: '85vh', overflowY: 'auto', border: '1px solid #d1d5db' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span className="grid-card-title">COBERTURA FGC POR INSTITUIÇÃO</span>
+              <button onClick={() => setShowFgcModal(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#8b8fa8' }}><X size={20} /></button>
+            </div>
+            <div style={{ height: '220px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={byInstArray} layout="vertical" barSize={16}>
+                  <XAxis type="number" tickFormatter={(v)=>`${v/1000}k`} tick={{fontSize:10, fill:'#8b8fa8'}} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" tick={{fontSize:9, fill:'#1a1d27', fontWeight: 600}} axisLine={false} tickLine={false} width={110} />
+                  <Tooltip formatter={(value: any) => formatBRL(Number(value))} cursor={{fill: 'rgba(0,0,0,0.02)'}} />
+                  <ReferenceLine x={LIMIT_FGC} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Limite FGC', fill: '#ef4444', fontSize: 9 }} />
+                  <Bar dataKey="value">
+                    {byInstArray.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={entry.value >= LIMIT_FGC ? '#ef4444' : '#00bfa5'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <FgcDetalhe byInstArray={byInstArray} LIMIT_FGC={LIMIT_FGC} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
