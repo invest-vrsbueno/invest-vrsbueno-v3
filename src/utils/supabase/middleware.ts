@@ -29,7 +29,12 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && !request.nextUrl.pathname.startsWith('/login')) {
+  // Rotas acessíveis sem sessão: /login (óbvio), /auth (troca o code do link de
+  // recuperação por sessão) e /redefinir-senha (decide sozinha o que mostrar — formulário
+  // se a sessão de recovery for válida, aviso de "link expirado" caso contrário).
+  const rotaPublica = ['/login', '/auth', '/redefinir-senha'].some((p) => request.nextUrl.pathname.startsWith(p));
+
+  if (!user && !rotaPublica) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('next', request.nextUrl.pathname);
