@@ -33,10 +33,10 @@ export function montarHtmlSelic({ atual, valorProjetado, dataInicio, dataFinal, 
 
   const resultadoHtml =
     resultado && !resultado.gapDetectado
-      ? `<div style="border:1px solid #a7f3d0;background:#ecfdf5;border-radius:10px;padding:16px 18px;margin-bottom:16px;">
-          <div style="font-size:12px;color:#065f46;">Valor projetado em ${formatDataBR(dataFinal)}</div>
-          <div style="font-size:20px;font-weight:700;color:#059669;">${formatBRL(resultado.valorFinal)}</div>
-          <div style="font-size:12px;color:#065f46;">Rendimento estimado: ${formatBRL(resultado.rendimento)}</div>
+      ? `<div style="background:#10b981;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+          <div style="font-size:12.5px;color:#e6fdf5;">Valor projetado em ${formatDataBR(dataFinal)}</div>
+          <div style="font-size:22px;font-weight:800;color:#ffffff;">${formatBRL(resultado.valorFinal)}</div>
+          <div style="font-size:12px;color:#dcfbef;">Rendimento estimado: ${formatBRL(resultado.rendimento)}</div>
         </div>`
       : `<div style="border:1px solid #fecaca;background:#fef2f2;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:12.5px;color:#b91c1c;">
           Projeção incompleta: cobertura de dados disponível apenas até ${resultado?.dataCobertaAte ? formatDataBR(resultado.dataCobertaAte) : '-'}.

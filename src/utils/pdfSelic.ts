@@ -42,14 +42,27 @@ export function gerarPdfSelic({ atual, valorProjetado, dataInicio, dataFinal, re
 
   let y = 56;
   if (resultado && !resultado.gapDetectado) {
-    doc.setFontSize(12);
-    doc.setTextColor(16, 150, 100);
-    doc.text(`Valor projetado em ${formatDataBR(dataFinal)}: ${formatBRL(resultado.valorFinal)}`, 14, y);
-    doc.setFontSize(10);
+    // Mesmo verde sólido (#10b981) + texto branco do card de resultado na tela e no e-mail.
+    const boxY = y - 6;
+    const boxHeight = 27;
+    doc.setFillColor(16, 185, 129);
+    doc.roundedRect(14, boxY, 182, boxHeight, 3, 3, 'F');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`Valor projetado em ${formatDataBR(dataFinal)}:`, 20, boxY + 8);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.text(formatBRL(resultado.valorFinal), 20, boxY + 17);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.text(`Rendimento estimado: ${formatBRL(resultado.rendimento)}`, 20, boxY + 24);
+
     doc.setTextColor(60, 63, 80);
-    y += 6;
-    doc.text(`Rendimento estimado: ${formatBRL(resultado.rendimento)}`, 14, y);
-    y += 10;
+    y = boxY + boxHeight + 8;
   } else if (resultado?.gapDetectado) {
     doc.setFontSize(10);
     doc.setTextColor(220, 38, 38);
