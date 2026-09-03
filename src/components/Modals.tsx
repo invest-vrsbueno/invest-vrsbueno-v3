@@ -79,8 +79,8 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-      <div style={{ background: '#12141c', padding: '24px', borderRadius: '12px', width: '900px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid #323546', color: '#fff' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}>
+      <div style={{ background: '#12141c', padding: 'clamp(16px, 4vw, 24px)', borderRadius: '12px', width: 'min(900px, 100%)', maxHeight: '90vh', overflowY: 'auto', border: '1px solid #323546', color: '#fff' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Simulador Avançado de Projeções (Meta Selic)</h2>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.2rem' }}>&times;</button>
@@ -102,7 +102,7 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
               Projeções de mercado (Focus) disponíveis até <strong>{tabelaOficial.length ? tabelaOficial[tabelaOficial.length - 1].fim.slice(0, 4) : '-'}</strong>.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '24px' }}>
               <div><label style={labelStyle}>Valor Projetado (R$)</label>
                    <input value={valorProjetado} onChange={(e) => setValorProjetado(e.target.value)} style={inputStyle} />
               </div>
@@ -158,7 +158,7 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
               </table>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
               <button onClick={baixarPdf} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a1d27', color: '#fff', border: '1px solid #323546', padding: '11px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
                 <Download size={16} /> Download PDF
               </button>

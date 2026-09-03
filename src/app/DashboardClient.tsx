@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calculator, LogOut, ShieldCheck, Pencil } from 'lucide-react';
+import { Calculator, LogOut, ShieldCheck, Pencil, Menu, X } from 'lucide-react';
 import { calculateAsset, generateEvolutionCurve } from '../utils/finance';
 import { createClient } from '../utils/supabase/client';
 import { agruparPorInstituicaoFGC, LIMIT_FGC } from '../utils/fgc';
@@ -77,12 +77,37 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
   }, [data]);
 
   const [scrolled, setScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showSubtitle, setShowSubtitle] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Breakpoint "mobile" deste projeto: < 600px (MD3 "Compact", ver architecture/materialdesign.md).
+  // Abaixo disso o header vira hamburger menu para não quebrar/estourar. O sufixo
+  // "— Dashboard" some um pouco antes (< 900px) para não ser truncado com "..." no tablet,
+  // onde os 4 botões já ocupam boa parte da largura disponível.
+  useEffect(() => {
+    const onResize = () => {
+      const w = document.documentElement.clientWidth;
+      setIsMobile(w < 600);
+      setShowSubtitle(w >= 900);
+    };
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const navItems = [
+    { key: 'selic', label: 'Calculadora Selic', icon: Calculator, onClick: () => { setShowSelic(true); setMobileMenuOpen(false); } },
+    { key: 'editar', label: 'Editar Ativos', icon: Pencil, href: '/editar-ativos' },
+    { key: 'seguranca', label: 'Segurança', icon: ShieldCheck, href: '/settings' },
+    { key: 'sair', label: 'Sair', icon: LogOut, onClick: () => { setMobileMenuOpen(false); handleLogout(); } },
+  ];
 
   return (
     <div className="fade-in">
@@ -105,17 +130,65 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
           transition: 'background 0.25s ease, padding 0.25s ease, box-shadow 0.25s ease, backdrop-filter 0.25s ease',
         }}
       >
-        <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: '1.25rem', letterSpacing: '0.01em' }}>
+        <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: 'clamp(0.85rem, 2.4vw, 1.25rem)', letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, flexShrink: 1 }}>
           <span style={{ fontWeight: 700, color: '#fff' }}>VRSBUENO</span>{' '}
-          <span style={{ fontWeight: 700, color: '#00bfa5' }}>INVEST</span>{' '}
-          <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.55)' }}>— Dashboard</span>
+          <span style={{ fontWeight: 700, color: '#00bfa5' }}>INVEST</span>
+          {showSubtitle && <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.55)' }}> — Dashboard</span>}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={() => setShowSelic(true)} style={{ height: '38px', boxSizing: 'border-box', background: '#1f2029', color: '#fff', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Calculadora Selic</button>
-          <a href="/editar-ativos" style={{ height: '38px', boxSizing: 'border-box', background: '#3b82f6', color: '#fff', border: 'none', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Editar Ativos</a>
-          <a href="/settings" title="Segurança da conta" style={{ height: '38px', boxSizing: 'border-box', background: 'transparent', color: '#e2e4f0', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Segurança</a>
-          <button onClick={handleLogout} title={userEmail} style={{ height: '38px', boxSizing: 'border-box', background: 'transparent', color: '#e2e4f0', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>Sair</button>
-        </div>
+
+        {isMobile ? (
+          <button
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+            aria-expanded={mobileMenuOpen}
+            style={{ width: '44px', height: '44px', boxSizing: 'border-box', background: 'transparent', color: '#fff', border: '1px solid #323546', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+            <button onClick={() => setShowSelic(true)} style={{ height: '38px', boxSizing: 'border-box', background: '#1f2029', color: '#fff', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Calculadora Selic</button>
+            <a href="/editar-ativos" style={{ height: '38px', boxSizing: 'border-box', background: '#3b82f6', color: '#fff', border: 'none', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>Editar Ativos</a>
+            <a href="/settings" title="Segurança da conta" style={{ height: '38px', boxSizing: 'border-box', background: 'transparent', color: '#e2e4f0', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>Segurança</a>
+            <button onClick={handleLogout} title={userEmail} style={{ height: '38px', boxSizing: 'border-box', background: 'transparent', color: '#e2e4f0', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sair</button>
+          </div>
+        )}
+
+        {isMobile && mobileMenuOpen && (
+          <div
+            style={{
+              position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0,
+              background: '#1a1d27', border: '1px solid #323546', borderRadius: '12px',
+              padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px',
+              boxShadow: '0 12px 32px rgba(0,0,0,0.35)',
+            }}
+          >
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const content = (
+                <>
+                  <Icon size={18} />
+                  <span>{item.label}</span>
+                </>
+              );
+              const itemStyle: React.CSSProperties = {
+                display: 'flex', alignItems: 'center', gap: '12px', minHeight: '48px',
+                padding: '0 16px', borderRadius: '8px', color: '#e2e4f0', fontSize: '0.9rem',
+                fontWeight: 600, textDecoration: 'none', background: 'transparent', border: 'none',
+                cursor: 'pointer', width: '100%', textAlign: 'left',
+              };
+              return item.href ? (
+                <a key={item.key} href={item.href} title={item.key === 'seguranca' ? 'Segurança da conta' : undefined} style={itemStyle} onClick={() => setMobileMenuOpen(false)}>
+                  {content}
+                </a>
+              ) : (
+                <button key={item.key} onClick={item.onClick} title={item.key === 'sair' ? userEmail : undefined} style={itemStyle}>
+                  {content}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* ZONE 1 (LIGHT GRID) */}

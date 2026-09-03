@@ -14,37 +14,84 @@ export function DashboardTopLayout({
 }: any) {
   const [width, setWidth] = React.useState(1200);
   const [showFgcModal, setShowFgcModal] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
-    setWidth(window.innerWidth > 1440 ? 1440 : window.innerWidth);
-    const cb = () => setWidth(window.innerWidth > 1440 ? 1440 : window.innerWidth);
-    window.addEventListener('resize', cb);
-    return () => window.removeEventListener('resize', cb);
+    // Mede o container INTERNO (sem padding próprio), não a tela inteira — o grid fica
+    // dentro de um wrapper com padding lateral, então usar document.clientWidth faria o
+    // grid calcular colunas para um espaço maior do que o realmente disponível, sobrando
+    // conteúdo para fora do lado direito (cards encostando na borda).
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width;
+      if (w) setWidth(w);
+    });
+    ro.observe(el);
+    setWidth(el.clientWidth);
+    return () => ro.disconnect();
   }, []);
   
-  const layout = [
+  const lgLayout = [
     { i: 'kpi1', x: 0, y: 0, w: 2, h: 4 },
     { i: 'kpi2', x: 2, y: 0, w: 2, h: 4 },
     { i: 'kpi3', x: 4, y: 0, w: 2, h: 4 },
     { i: 'kpi4', x: 6, y: 0, w: 2, h: 4 },
     { i: 'kpi5', x: 8, y: 0, w: 2, h: 4 },
     { i: 'kpi6', x: 10, y: 0, w: 2, h: 4 },
-    
+
     { i: 'chartArea', x: 0, y: 4, w: 8, h: 10 },
     { i: 'chartPie', x: 8, y: 4, w: 4, h: 10 },
-    
+
     { i: 'chartBar', x: 0, y: 14, w: 8, h: 13 },
     { i: 'saldoList', x: 8, y: 14, w: 4, h: 13 },
 
     { i: 'distList', x: 0, y: 27, w: 12, h: 10 }
   ];
 
+  // Breakpoints menores precisam de um layout PRÓPRIO e explícito: o react-grid-layout
+  // não sabe reposicionar itens com segurança a partir do layout "lg" quando a largura em
+  // colunas (w) do item excede o número de colunas do breakpoint menor — isso causa
+  // sobreposição de cards. Empilha em coluna única (mobile) ou 2 colunas (tablet estreito).
+  function stackedLayout(cols: number, kpiPerRow: number) {
+    const kpis = ['kpi1', 'kpi2', 'kpi3', 'kpi4', 'kpi5', 'kpi6'];
+    const kpiW = cols / kpiPerRow;
+    const items: { i: string; x: number; y: number; w: number; h: number }[] = [];
+    let y = 0;
+    kpis.forEach((id, idx) => {
+      const col = idx % kpiPerRow;
+      if (col === 0 && idx > 0) y += 4;
+      items.push({ i: id, x: col * kpiW, y, w: kpiW, h: 4 });
+    });
+    y += 4;
+    const panels: [string, number][] = [
+      ['chartArea', 10], ['chartPie', 10], ['chartBar', 13], ['saldoList', 13], ['distList', 10],
+    ];
+    panels.forEach(([id, h]) => {
+      items.push({ i: id, x: 0, y, w: cols, h });
+      y += h;
+    });
+    return items;
+  }
+
+  const layouts = {
+    lg: lgLayout,
+    md: stackedLayout(10, 2),
+    sm: stackedLayout(6, 2),
+    xs: stackedLayout(4, 1),
+    xxs: stackedLayout(2, 1),
+  };
+
   return (
-    <div style={{ padding: '24px', maxWidth: '1440px', margin: '0 auto' }}>
+    <div style={{ padding: 'clamp(12px, 4vw, 24px)', maxWidth: '1440px', margin: '0 auto' }}>
+      <div ref={containerRef}>
       <ResponsiveGridLayout
         className="layout"
         width={width}
-        layouts={{ lg: layout }}
-        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+        layouts={layouts}
+        // Estes números são calibrados para a largura do CONTEÚDO (já sem o padding do
+        // wrapper, ~48px em telas >= 600px — ver clamp() no style acima), não a largura
+        // total da tela. Por isso são ~48px menores que os breakpoints "nominais" do MD3.
+        breakpoints={{ lg: 1150, md: 950, sm: 690, xs: 430, xxs: 0 }}
         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
         rowHeight={30}
         margin={[16, 16]}
@@ -150,10 +197,11 @@ export function DashboardTopLayout({
         </div>
 
       </ResponsiveGridLayout>
+      </div>
 
       {showFgcModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setShowFgcModal(false)}>
-          <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: '640px', maxHeight: '85vh', overflowY: 'auto', border: '1px solid #d1d5db' }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }} onClick={() => setShowFgcModal(false)}>
+          <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: 'min(640px, 100%)', maxHeight: '85vh', overflowY: 'auto', border: '1px solid #d1d5db' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span className="grid-card-title">COBERTURA FGC POR INSTITUIÇÃO</span>
               <button onClick={() => setShowFgcModal(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#8b8fa8' }}><X size={20} /></button>

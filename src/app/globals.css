@@ -25,12 +25,16 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+html {
+  overflow-x: hidden;
+}
 body {
   background: var(--bg-main);
   color: var(--text-main);
   font-family: 'Inter', sans-serif;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* Zone 2 Dark Layout */
@@ -59,29 +63,36 @@ body {
   flex-direction: column;
 }
 .grid-card-header {
-  padding: 14px 18px 6px;
+  padding: clamp(10px, 3vw, 14px) clamp(12px, 3vw, 18px) 6px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
+  gap: 8px;
 }
 .grid-card-title {
-  font-size: 0.72rem;
+  font-size: clamp(0.65rem, 2vw, 0.72rem);
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Typography elements */
 .text-value-large {
-  font-size: 1.6rem;
+  font-size: clamp(1.15rem, 5vw, 1.6rem);
   font-weight: 700;
   color: var(--text-main);
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .kpi-subtitle {
-  font-size: 0.75rem;
+  font-size: clamp(0.68rem, 2.2vw, 0.75rem);
   color: var(--text-muted);
   font-weight: 500;
 }

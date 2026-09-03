@@ -39,7 +39,7 @@ export default async function DashboardPage() {
 
   const rawInvestimentos = await getInvestimentos();
   return (
-    <div style={{ width: '100vw', minHeight: '100vh' }}>
+    <div style={{ width: '100%', minHeight: '100vh' }}>
       <DashboardClient initialData={rawInvestimentos} userEmail={user.email!} />
     </div>
   );
