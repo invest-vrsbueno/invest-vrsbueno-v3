@@ -17,7 +17,7 @@ function parseValorBR(s: string) {
   return Number.isFinite(n) ? n : 0;
 }
 
-const inputStyle: React.CSSProperties = { width: '100%', padding: '10px', background: '#1f2029', border: '1px solid #323546', color: '#fff', borderRadius: '6px' };
+const inputStyle: React.CSSProperties = { width: '100%', padding: '10px', background: 'var(--dark-card)', border: '1px solid var(--dark-border)', color: 'var(--dark-fg)', borderRadius: '6px' };
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: '0.75rem', marginBottom: '8px' };
 
 export function ModalSelic({ onClose }: { onClose: () => void }) {
@@ -80,10 +80,10 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}>
-      <div style={{ background: '#12141c', padding: 'clamp(16px, 4vw, 24px)', borderRadius: '12px', width: 'min(900px, 100%)', maxHeight: '90vh', overflowY: 'auto', border: '1px solid #323546', color: '#fff' }}>
+      <div style={{ background: 'var(--dark-popover)', padding: 'clamp(16px, 4vw, 24px)', borderRadius: '12px', width: 'min(900px, 100%)', maxHeight: '90vh', overflowY: 'auto', border: '1px solid var(--dark-border)', color: 'var(--dark-fg)', boxShadow: 'var(--dark-shadow-popover)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Simulador Avançado de Projeções (Meta Selic)</h2>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.2rem' }}>&times;</button>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--dark-fg)', cursor: 'pointer', fontSize: '1.2rem' }}>&times;</button>
         </div>
 
         {loading && <p style={{ fontSize: '0.85rem', color: '#8b8fa8' }}>Consultando Meta Selic e projeções do Banco Central...</p>}
@@ -97,7 +97,7 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
 
         {!loading && !erro && (
           <>
-            <p style={{ fontSize: '0.85rem', marginBottom: '16px', color: '#e2e4f0' }}>
+            <p style={{ fontSize: '0.85rem', marginBottom: '16px', color: 'var(--dark-fg)' }}>
               Taxa oficial vigente: <strong>{atual ? `${atual.valor.toFixed(2)}%` : '-'}</strong> (BCB, {atual ? formatDataBR(atual.data) : '-'}).
               Projeções de mercado (Focus) disponíveis até <strong>{tabelaOficial.length ? tabelaOficial[tabelaOficial.length - 1].fim.slice(0, 4) : '-'}</strong>.
             </p>
@@ -132,8 +132,8 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
               </div>
             )}
 
-            <div style={{ border: '1px solid #323546', borderRadius: '8px', overflow: 'hidden', marginBottom: '24px' }}>
-              <div style={{ padding: '16px', background: '#1c1e28', borderBottom: '1px solid #323546', fontSize: '0.85rem', fontWeight: 500 }}>
+            <div style={{ border: '1px solid var(--dark-border)', borderRadius: '8px', overflow: 'hidden', marginBottom: '24px' }}>
+              <div style={{ padding: '16px', background: 'var(--dark-card)', borderBottom: '1px solid var(--dark-border)', fontSize: '0.85rem', fontWeight: 500 }}>
                 Tabela Oficial do BC (Meta Selic + projeções Focus)
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
@@ -147,7 +147,7 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
                 </thead>
                 <tbody>
                   {tabelaOficial.map((p, i) => (
-                    <tr key={i} style={{ borderTop: '1px solid #23253b', color: '#e2e4f0' }}>
+                    <tr key={i} style={{ borderTop: '1px solid var(--dark-border)', color: 'var(--dark-fg)' }}>
                       <td style={{ padding: '8px 16px' }}>{formatDataBR(p.inicio)}</td>
                       <td style={{ padding: '8px 16px' }}>{formatDataBR(p.fim)}</td>
                       <td style={{ padding: '8px 16px' }}>{p.taxa.toFixed(2)}%</td>
@@ -159,10 +159,10 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
             </div>
 
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button onClick={baixarPdf} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1a1d27', color: '#fff', border: '1px solid #323546', padding: '11px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={baixarPdf} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--dark-card)', color: 'var(--dark-fg)', border: '1px solid var(--dark-border)', padding: '11px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
                 <Download size={16} /> Download PDF
               </button>
-              <button onClick={enviarPorEmail} disabled={enviandoEmail} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#3b82f6', color: '#fff', border: 'none', padding: '11px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: enviandoEmail ? 'default' : 'pointer', opacity: enviandoEmail ? 0.6 : 1 }}>
+              <button onClick={enviarPorEmail} disabled={enviandoEmail} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--accent-blue)', color: '#fff', border: 'none', padding: '11px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: enviandoEmail ? 'default' : 'pointer', opacity: enviandoEmail ? 0.6 : 1 }}>
                 <Mail size={16} /> {enviandoEmail ? 'Enviando...' : 'Enviar por e-mail'}
               </button>
               {statusEmail === 'ok' && <span style={{ color: '#10b981', fontSize: '0.8rem' }}>E-mail enviado.</span>}

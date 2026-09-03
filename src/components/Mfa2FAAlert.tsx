@@ -20,10 +20,10 @@ export function Mfa2FAAlert() {
   if (temFatorAtivo !== false || fechadoNestaSessao) return null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-      <div style={{ background: '#12141c', padding: '28px', borderRadius: '12px', width: '380px', border: '1px solid #f59e0b', color: '#fff' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}>
+      <div style={{ background: 'var(--dark-popover)', padding: '28px', borderRadius: '12px', width: 'min(380px, 100%)', maxHeight: '90vh', overflowY: 'auto', border: '1px solid var(--dark-warning)', color: 'var(--dark-fg)', boxShadow: 'var(--dark-shadow-popover)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <ShieldAlert size={20} color="#f59e0b" />
+          <ShieldAlert size={20} color="var(--dark-warning)" />
           <h2 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Ative o 2FA para maior segurança</h2>
         </div>
         <p style={{ fontSize: '0.8rem', color: '#8b8fa8', marginBottom: '20px' }}>

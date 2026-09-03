@@ -50,7 +50,7 @@ function formatDataBR(iso: string | null) {
   return `${d}/${m}/${y}`;
 }
 
-const inputStyle: React.CSSProperties = { width: '100%', padding: '6px 8px', background: '#1f2029', border: '1px solid #323546', color: '#fff', borderRadius: '5px', fontSize: '0.8rem' };
+const inputStyle: React.CSSProperties = { width: '100%', padding: '6px 8px', background: 'var(--dark-card)', border: '1px solid var(--dark-border)', color: 'var(--dark-fg)', borderRadius: '5px', fontSize: '0.8rem' };
 const NOVO_ID = '__novo__';
 
 type Acao =
@@ -166,7 +166,7 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
   }
 
   const linhaEditavel = (id: string) => (
-    <tr key={id} style={{ background: '#1b1d27' }}>
+    <tr key={id} style={{ background: 'var(--dark-popover)' }}>
       <td style={{ padding: '8px' }}>
         <select value={rascunho.tipo} onChange={(e) => setRascunho({ ...rascunho, tipo: e.target.value })} style={inputStyle}>
           <option>CDB</option><option>LCA</option><option>LCI</option><option>LF</option>
@@ -183,7 +183,7 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
       <td style={{ padding: '8px' }}><input type="number" step="0.01" value={rascunho.valor_aplicado} onChange={(e) => setRascunho({ ...rascunho, valor_aplicado: parseFloat(e.target.value) || 0 })} style={inputStyle} /></td>
       <td style={{ padding: '8px' }}><input type="date" value={rascunho.data_aplicacao} onChange={(e) => setRascunho({ ...rascunho, data_aplicacao: e.target.value })} style={inputStyle} /></td>
       <td style={{ padding: '8px' }}><input type="date" value={rascunho.data_vencimento || ''} onChange={(e) => setRascunho({ ...rascunho, data_vencimento: e.target.value })} style={inputStyle} /></td>
-      <td style={{ padding: '8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, background: '#1b1d27', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
+      <td style={{ padding: '8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, background: 'var(--dark-popover)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
         <button onClick={pedirConfirmacaoSalvar} title="Salvar" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#10b981', marginRight: '8px' }}><Check size={18} /></button>
         <button onClick={cancelarEdicao} title="Cancelar" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#8b8fa8' }}><X size={18} /></button>
       </td>
@@ -215,7 +215,7 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
           <div style={{ overflowX: 'auto' }}>
             <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1100px' }}>
               <thead>
-                <tr style={{ background: '#1b1d27' }}>
+                <tr style={{ background: 'var(--dark-popover)' }}>
                   <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Tipo</th>
                   <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Ativo</th>
                   <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Instituição</th>
@@ -224,7 +224,7 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
                   <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Aplicado</th>
                   <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Aplicação</th>
                   <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Vencimento</th>
-                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem', position: 'sticky', right: 0, background: '#1b1d27', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>Ações</th>
+                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem', position: 'sticky', right: 0, background: 'var(--dark-popover)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -233,16 +233,16 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
                   editingId === item.id ? (
                     linhaEditavel(item.id)
                   ) : (
-                    <tr key={item.id} style={{ borderTop: '1px solid #23253b' }}>
-                      <td style={{ color: '#e2e4f0', padding: '10px 8px' }}>{item.tipo}</td>
-                      <td style={{ color: '#e2e4f0', padding: '10px 8px' }}>{item.emissor}</td>
-                      <td style={{ color: '#e2e4f0', padding: '10px 8px' }}>{item.instituicao_agrupadora}</td>
-                      <td style={{ color: '#e2e4f0', padding: '10px 8px' }}>{item.indexador_tipo}</td>
-                      <td style={{ color: '#e2e4f0', padding: '10px 8px' }}>{item.taxa}%</td>
-                      <td style={{ color: '#e2e4f0', padding: '10px 8px' }}>{formatBRL(item.valor_aplicado)}</td>
+                    <tr key={item.id} style={{ borderTop: '1px solid var(--dark-border)' }}>
+                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.tipo}</td>
+                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.emissor}</td>
+                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.instituicao_agrupadora}</td>
+                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.indexador_tipo}</td>
+                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.taxa}%</td>
+                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{formatBRL(item.valor_aplicado)}</td>
                       <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>{formatDataBR(item.data_aplicacao)}</td>
                       <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>{formatDataBR(item.data_vencimento)}</td>
-                      <td style={{ padding: '10px 8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, background: '#1f2029', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
+                      <td style={{ padding: '10px 8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, background: 'var(--dark-card)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
                         <button onClick={() => iniciarEdicao(item)} disabled={editingId !== null} title="Editar" style={{ background: 'transparent', border: 'none', cursor: editingId !== null ? 'default' : 'pointer', color: '#8b8fa8', marginRight: '10px', opacity: editingId !== null ? 0.4 : 1 }}><Pencil size={16} /></button>
                         <button onClick={() => pedirConfirmacaoRemover(item)} disabled={editingId !== null} title="Remover" style={{ background: 'transparent', border: 'none', cursor: editingId !== null ? 'default' : 'pointer', color: '#ef4444', opacity: editingId !== null ? 0.4 : 1 }}><Trash2 size={16} /></button>
                       </td>

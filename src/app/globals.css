@@ -21,6 +21,20 @@
 
   --shadow-sm: 0 2px 6px rgba(0,0,0,0.12);
   --shadow-md: 0 4px 14px rgba(0,0,0,0.15);
+
+  /* Dark Theme tokens — estrutura inspirada no tweakcn (shadcn/ui theme editor),
+     recolorida com a paleta vrsbueno. 3 níveis de profundidade: bg < card < popover.
+     Ver architecture/PLANO_tema_dark_tweakcn.md para o mapeamento completo. */
+  --dark-bg: #12141c;
+  --dark-fg: #f1f2f8;
+  --dark-card: #1a1d27;
+  --dark-card-fg: #f1f2f8;
+  --dark-popover: #1f2230;
+  --dark-secondary: #232635;
+  --dark-border: #2b2e3f;
+  --dark-warning: #f59e0b;
+  --dark-ring: #00bfa5;
+  --dark-shadow-popover: 0 24px 60px rgba(0,0,0,0.5);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,16 +53,22 @@ body {
 
 /* Zone 2 Dark Layout */
 .dark-zone {
-  background-color: #14151a;
-  color: #e2e4f0;
+  background-color: var(--dark-bg);
+  color: var(--dark-fg);
   padding: 40px 24px;
   min-height: 500px;
 }
 .dark-card {
-  background-color: #1f2029;
-  border: 1px solid #323546;
+  background-color: var(--dark-card);
+  border: 1px solid var(--dark-border);
   border-radius: 12px;
   overflow: hidden;
+}
+
+/* Foco de teclado visível — não existia antes em nenhuma parte do app */
+:focus-visible {
+  outline: 2px solid var(--dark-ring);
+  outline-offset: 2px;
 }
 
 /* Reusable Components */
@@ -124,9 +144,9 @@ body {
 
 /* Native Select Drill-down */
 select.dark-select {
-  background-color: #1a1b24;
-  color: #fff;
-  border: 1px solid #323546;
+  background-color: var(--dark-card);
+  color: var(--dark-fg);
+  border: 1px solid var(--dark-border);
   border-radius: 6px;
   padding: 10px;
   width: 100%;

@@ -158,9 +158,9 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
           <div
             style={{
               position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0,
-              background: '#1a1d27', border: '1px solid #323546', borderRadius: '12px',
+              background: 'var(--dark-popover)', border: '1px solid var(--dark-border)', borderRadius: '12px',
               padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px',
-              boxShadow: '0 12px 32px rgba(0,0,0,0.35)',
+              boxShadow: 'var(--dark-shadow-popover)',
             }}
           >
             {navItems.map((item) => {
@@ -173,7 +173,7 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
               );
               const itemStyle: React.CSSProperties = {
                 display: 'flex', alignItems: 'center', gap: '12px', minHeight: '48px',
-                padding: '0 16px', borderRadius: '8px', color: '#e2e4f0', fontSize: '0.9rem',
+                padding: '0 16px', borderRadius: '8px', color: 'var(--dark-fg)', fontSize: '0.9rem',
                 fontWeight: 600, textDecoration: 'none', background: 'transparent', border: 'none',
                 cursor: 'pointer', width: '100%', textAlign: 'left',
               };
