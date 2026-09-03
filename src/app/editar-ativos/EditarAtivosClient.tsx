@@ -183,7 +183,7 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
       <td style={{ padding: '8px' }}><input type="number" step="0.01" value={rascunho.valor_aplicado} onChange={(e) => setRascunho({ ...rascunho, valor_aplicado: parseFloat(e.target.value) || 0 })} style={inputStyle} /></td>
       <td style={{ padding: '8px' }}><input type="date" value={rascunho.data_aplicacao} onChange={(e) => setRascunho({ ...rascunho, data_aplicacao: e.target.value })} style={inputStyle} /></td>
       <td style={{ padding: '8px' }}><input type="date" value={rascunho.data_vencimento || ''} onChange={(e) => setRascunho({ ...rascunho, data_vencimento: e.target.value })} style={inputStyle} /></td>
-      <td style={{ padding: '8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, background: 'var(--dark-popover)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
+      <td style={{ padding: '8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, zIndex: 1, background: 'var(--dark-popover)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
         <button onClick={pedirConfirmacaoSalvar} title="Salvar" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#10b981', marginRight: '8px' }}><Check size={18} /></button>
         <button onClick={cancelarEdicao} title="Cancelar" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#8b8fa8' }}><X size={18} /></button>
       </td>
@@ -191,9 +191,9 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
   );
 
   return (
-    <div className="fade-in dark-zone" style={{ minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div className="fade-in dark-zone" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ maxWidth: '1440px', margin: '0 auto', width: '100%', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px', flexShrink: 0 }}>
           <div>
             <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8b8fa8', fontSize: '0.85rem', textDecoration: 'none', marginBottom: '8px' }}>
               <ArrowLeft size={14} /> Voltar ao dashboard
@@ -209,49 +209,51 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
           </button>
         </div>
 
-        {erro && <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#ef4444', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.85rem' }}>{erro}</div>}
+        {erro && <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', color: '#ef4444', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.85rem', flexShrink: 0 }}>{erro}</div>}
 
-        <div className="dark-card">
-          <div style={{ overflowX: 'auto' }}>
-            <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1100px' }}>
-              <thead>
-                <tr style={{ background: 'var(--dark-popover)' }}>
-                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Tipo</th>
-                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Ativo</th>
-                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Instituição</th>
-                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Indexador</th>
-                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Taxa</th>
-                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Aplicado</th>
-                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Aplicação</th>
-                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Vencimento</th>
-                  <th style={{ color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem', position: 'sticky', right: 0, background: 'var(--dark-popover)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {editingId === NOVO_ID && linhaEditavel(NOVO_ID)}
-                {data.map((item) =>
-                  editingId === item.id ? (
-                    linhaEditavel(item.id)
-                  ) : (
-                    <tr key={item.id} style={{ borderTop: '1px solid var(--dark-border)' }}>
-                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.tipo}</td>
-                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.emissor}</td>
-                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.instituicao_agrupadora}</td>
-                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.indexador_tipo}</td>
-                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.taxa}%</td>
-                      <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{formatBRL(item.valor_aplicado)}</td>
-                      <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>{formatDataBR(item.data_aplicacao)}</td>
-                      <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>{formatDataBR(item.data_vencimento)}</td>
-                      <td style={{ padding: '10px 8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, background: 'var(--dark-card)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
-                        <button onClick={() => iniciarEdicao(item)} disabled={editingId !== null} title="Editar" style={{ background: 'transparent', border: 'none', cursor: editingId !== null ? 'default' : 'pointer', color: '#8b8fa8', marginRight: '10px', opacity: editingId !== null ? 0.4 : 1 }}><Pencil size={16} /></button>
-                        <button onClick={() => pedirConfirmacaoRemover(item)} disabled={editingId !== null} title="Remover" style={{ background: 'transparent', border: 'none', cursor: editingId !== null ? 'default' : 'pointer', color: '#ef4444', opacity: editingId !== null ? 0.4 : 1 }}><Trash2 size={16} /></button>
-                      </td>
-                    </tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          </div>
+        {/* Área "estilo planilha": só esta caixa rola (vertical e horizontal). Cabeçalho da
+            tabela e coluna de Ações ficam fixos via position:sticky — ver
+            architecture/EDITAR_ATIVOS_scroll_planilha.md */}
+        <div className="dark-card" style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+          <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1100px' }}>
+            <thead>
+              <tr>
+                <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--dark-popover)', color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Tipo</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--dark-popover)', color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Ativo</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--dark-popover)', color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Instituição</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--dark-popover)', color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Indexador</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--dark-popover)', color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Taxa</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--dark-popover)', color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Aplicado</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--dark-popover)', color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Aplicação</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 2, background: 'var(--dark-popover)', color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem' }}>Vencimento</th>
+                {/* Célula de canto: sticky nos dois eixos (top + right), zIndex mais alto que as demais */}
+                <th style={{ position: 'sticky', top: 0, right: 0, zIndex: 3, background: 'var(--dark-popover)', color: '#8b8fa8', padding: '10px 8px', fontSize: '0.75rem', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {editingId === NOVO_ID && linhaEditavel(NOVO_ID)}
+              {data.map((item) =>
+                editingId === item.id ? (
+                  linhaEditavel(item.id)
+                ) : (
+                  <tr key={item.id} style={{ borderTop: '1px solid var(--dark-border)' }}>
+                    <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.tipo}</td>
+                    <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.emissor}</td>
+                    <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.instituicao_agrupadora}</td>
+                    <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.indexador_tipo}</td>
+                    <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.taxa}%</td>
+                    <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{formatBRL(item.valor_aplicado)}</td>
+                    <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>{formatDataBR(item.data_aplicacao)}</td>
+                    <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>{formatDataBR(item.data_vencimento)}</td>
+                    <td style={{ padding: '10px 8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, zIndex: 1, background: 'var(--dark-card)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
+                      <button onClick={() => iniciarEdicao(item)} disabled={editingId !== null} title="Editar" style={{ background: 'transparent', border: 'none', cursor: editingId !== null ? 'default' : 'pointer', color: '#8b8fa8', marginRight: '10px', opacity: editingId !== null ? 0.4 : 1 }}><Pencil size={16} /></button>
+                      <button onClick={() => pedirConfirmacaoRemover(item)} disabled={editingId !== null} title="Remover" style={{ background: 'transparent', border: 'none', cursor: editingId !== null ? 'default' : 'pointer', color: '#ef4444', opacity: editingId !== null ? 0.4 : 1 }}><Trash2 size={16} /></button>
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
