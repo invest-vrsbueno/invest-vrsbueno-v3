@@ -1,3 +1,5 @@
+import { aliquotaIR } from './fgc';
+
 export interface SelicPeriodo {
   inicio: string; // yyyy-mm-dd
   fim: string; // yyyy-mm-dd
@@ -57,6 +59,8 @@ function businessDays(start: Date, end: Date): number {
 export interface ProjecaoResultado {
   valorFinal: number;
   rendimento: number;
+  rendimentoLiquido: number;
+  valorFinalLiquido: number;
   segmentos: { inicio: string; fim: string; taxa: number; origem: string; dias: number }[];
   dataCobertaAte: string | null;
   gapDetectado: boolean;
@@ -107,9 +111,17 @@ export function projetarComTabela(
   const dataCobertaAte = segmentos.length ? segmentos[segmentos.length - 1].fim : null;
   const gapDetectado = cursor <= dtFinal;
 
+  const rendimento = valor - valorInicial;
+  // Simulação genérica (sem produto/instituição real): assume renda fixa tributável (CDB) na
+  // tabela regressiva, pelo prazo total simulado (dataInicio até dataFinal).
+  const aliquota = aliquotaIR('CDB', dataInicioStr, dtFinal);
+  const rendimentoLiquido = rendimento - rendimento * aliquota;
+
   return {
     valorFinal: valor,
-    rendimento: valor - valorInicial,
+    rendimento,
+    rendimentoLiquido,
+    valorFinalLiquido: valorInicial + rendimentoLiquido,
     segmentos,
     dataCobertaAte,
     gapDetectado,

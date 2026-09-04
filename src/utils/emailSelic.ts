@@ -37,6 +37,10 @@ export function montarHtmlSelic({ atual, valorProjetado, dataInicio, dataFinal, 
           <div style="font-size:12.5px;color:#e6fdf5;">Valor projetado em ${formatDataBR(dataFinal)}</div>
           <div style="font-size:22px;font-weight:800;color:#ffffff;">${formatBRL(resultado.valorFinal)}</div>
           <div style="font-size:12px;color:#dcfbef;">Rendimento estimado: ${formatBRL(resultado.rendimento)}</div>
+          <div style="height:1px;background:rgba(255,255,255,0.25);margin:12px 0;"></div>
+          <div style="font-size:12.5px;color:#e6fdf5;">Valor projetado líquido (com IR)</div>
+          <div style="font-size:18px;font-weight:800;color:#ffffff;">${formatBRL(resultado.valorFinalLiquido)}</div>
+          <div style="font-size:12px;color:#dcfbef;">Rendimento líquido estimado: ${formatBRL(resultado.rendimentoLiquido)}</div>
         </div>`
       : `<div style="border:1px solid #fecaca;background:#fef2f2;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:12.5px;color:#b91c1c;">
           Projeção incompleta: cobertura de dados disponível apenas até ${resultado?.dataCobertaAte ? formatDataBR(resultado.dataCobertaAte) : '-'}.

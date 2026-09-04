@@ -12,6 +12,15 @@ Vencimento vs. Gerado, e Investimentos a Vencer — todos viraram tabela com IR 
 sanfona (Instituição → Investimento, ou Ano → Instituição → Investimento no caso do Resumo
 Anual), usando o mesmo formato de nome de investimento (`Tipo Ativo Indexador - Taxa%`).
 
+**Depois disso, mais uma rodada de ajustes finos (commit mais recente):** legenda do gráfico
+"Alocação %" reorganizada em grade própria (não é mais o `<Legend>` do Recharts), raio da
+pizza reduzido ~5% + conteúdo centralizado verticalmente no card, gráfico de barras do modal
+"Cobertura FGC" corrigido pra mostrar todas as instituições (Recharts escondia rótulos por
+falta de espaço), o KPI "Cobertura FGC" redesenhado (fundo verde/vermelho claro por estado,
+mostra banco + investimento em risco em vez de só a contagem), e "Valor Projetado Líquido"
+(com IR) adicionado no modal e no e-mail do Simulador Selic. Também gerei uma página de
+revisão dos 3 e-mails de alerta (ver item abaixo).
+
 ---
 
 ## O que foi feito e commitado nesta sessão
@@ -109,6 +118,53 @@ dos outros dois cards), com colunas Rend. Bruto / Rend. Líquido (rendimento, n�
   motivo — o mock ali usa `InvestimentoVencendo` e precisava dos campos novos pra compilar.
   Só adicionamos `rendimentoBruto`/`rendimentoLiquido` no mock; os outros campos
   (`indexador_tipo`/`taxa`/`valorLiquido`) já estavam lá, adicionados pela outra sessão.
+
+### 7. Ajustes finos de visualização (gráficos e cards)
+Tudo pequeno, cada um testado num preview isolado antes de aplicar:
+
+- **"Alocação %"**: o `<Legend>` do Recharts quebrava linha por largura de item, ficando
+  desalinhado. Trocado por uma grade HTML própria (`grid-template-columns: repeat(4, 1fr)`)
+  logo abaixo do gráfico, com o pedaço do gráfico em altura fixa (`220px`) — ver
+  `DashboardTopLayout.tsx`, card `chartPie`.
+- Raio da pizza reduzido de `outerRadius=85/innerRadius=55` para `81/52` (~5%) porque o
+  rótulo da maior fatia (ex.: 40%) cortava no topo do card. Card também ganhou
+  `justifyContent: 'center'` pra não sobrar espaço em branco embaixo quando o conteúdo é
+  menor que a altura do grid item.
+- **Modal "Cobertura FGC por Instituição"**: o `BarChart` vertical do Recharts escondia
+  rótulos do eixo Y quando havia muitas instituições num container de altura fixa (ele
+  descarta ticks que não cabem, sem avisar). Corrigido com altura dinâmica
+  (`Math.max(220, byInstArray.length * 34)`), `interval={0}` no `YAxis` (força todos os
+  rótulos) e `barCategoryGap="35%"` pra espaçar as barras.
+- **KPI "Cobertura FGC"** (`DashboardTopLayout.tsx`, card `kpi6`): redesenhado a pedido do
+  usuário depois de várias iterações. Fundo do card fica `rgba(16,185,129,0.10)` (verde) com
+  borda `rgba(16,185,129,0.35)` quando protegido, ou `rgba(239,68,68,0.10)`/`0.35` (vermelho)
+  quando alguma instituição está em risco. No estado de risco, em vez de só contar bancos,
+  mostra o nome do banco (vermelho, negrito) e a lista dos investimentos daquele banco no
+  formato padrão (`nomeInvestimentoKpi`, duplicado localmente no arquivo). A linha "Acima do
+  Limite de Proteção" foi removida desse estado pra sobrar espaço — só aparece no estado
+  protegido/0 bancos.
+- **Simulador Selic**: `projetarComTabela` (`src/utils/selic.ts`) agora também calcula
+  `rendimentoLiquido`/`valorFinalLiquido`, aplicando a mesma tabela regressiva de IR
+  (`aliquotaIR` de `fgc.ts`) do prazo total simulado — **assume sempre CDB/tributável**, essa
+  simulação não tem conceito de instituição/produto real pra saber se seria isento. O modal
+  (`ModalSelic` em `Modals.tsx`) e o e-mail (`emailSelic.ts`) mostram "Valor Projetado
+  Líquido (com IR)" logo abaixo do valor bruto. O PDF (`pdfSelic.ts`) **não foi atualizado**
+  — só o modal e o e-mail foram pedidos.
+
+### 8. Página de revisão dos e-mails de alerta
+A pedido do usuário, gerei uma página só pra ele revisar o conteúdo dos 3 e-mails
+automáticos (Risco FGC, Vencimento, Simulação Selic) sem precisar disparar nenhum de
+verdade. Processo: script temporário (`npx tsx`, apagado depois) chamando
+`montarHtmlAlerta`/`montarHtmlVencimento`/`montarHtmlSelic` direto com dados fictícios,
+salvando o HTML puro em arquivos; esses HTMLs foram embutidos (via `iframe.srcdoc`, cada um
+como string JS) numa página nova em
+[architecture/preview_emails_alerta.html](preview_emails_alerta.html), publicada como
+Artifact. **Gotcha:** carreguei a fonte do Google Fonts dentro de cada iframe pra ficar
+bonito, e isso causou reflow (altura calculada antes da fonte trocar, sobrando espaço em
+branco) no e-mail mais longo (Selic) — tirei a webfont de dentro dos iframes (cai no
+fallback do stack já declarado inline nos e-mails) e o bug sumiu. Esse arquivo fica em
+`architecture/` fora do fluxo normal de commit/deploy — é só documentação/referência, pode
+reabrir e republicar como Artifact se quiser atualizar depois.
 
 ---
 

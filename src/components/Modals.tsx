@@ -129,6 +129,10 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
                 <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.85)' }}>Valor projetado em {formatDataBR(dataFinal)}:</div>
                 <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#fff' }}>{formatBRL(resultado.valorFinal)}</div>
                 <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.8)' }}>Rendimento estimado: {formatBRL(resultado.rendimento)}</div>
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.25)', margin: '12px 0' }} />
+                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.85)' }}>Valor projetado líquido (com IR):</div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#fff' }}>{formatBRL(resultado.valorFinalLiquido)}</div>
+                <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.8)' }}>Rendimento líquido estimado: {formatBRL(resultado.rendimentoLiquido)}</div>
               </div>
             )}
 
