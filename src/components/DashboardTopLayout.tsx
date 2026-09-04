@@ -50,8 +50,8 @@ export function DashboardTopLayout({
     { i: 'chartArea', x: 0, y: 4, w: 8, h: 10 },
     { i: 'chartPie', x: 8, y: 4, w: 4, h: 10 },
 
-    { i: 'chartBar', x: 0, y: 14, w: 8, h: 16 },
-    { i: 'saldoList', x: 8, y: 14, w: 4, h: 16 },
+    { i: 'chartBar', x: 0, y: 14, w: 6, h: 16 },
+    { i: 'saldoList', x: 6, y: 14, w: 6, h: 16 },
 
     { i: 'distList', x: 0, y: 30, w: 12, h: 14 }
   ];

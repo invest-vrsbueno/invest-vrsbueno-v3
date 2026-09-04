@@ -3,23 +3,37 @@
 **Leia este arquivo primeiro.** Continuação de
 [STATUS_2026-09-03_sessao_completa.md](STATUS_2026-09-03_sessao_completa.md).
 
-**Produção:** https://invest-vrsbueno-v3.vercel.app (ainda não recebeu o deploy desta sessão —
-tudo só commitado localmente até agora, sem `git push`/`vercel --prod`, ver seção "Não fiz"
-abaixo).
+**Produção:** https://invest-vrsbueno-v3.vercel.app — **atualizada nesta sessão.** Usuário
+pediu explicitamente `git push origin main` (foi, 4 commits) e depois `vercel --prod --yes`
+(deploy ok, precisou rodar 2x — "Not authorized" na 1ª tentativa é um gotcha conhecido,
+documentado abaixo de novo pra reforçar). Mudanças feitas **depois** desse deploy (ver item 9)
+ainda não foram enviadas — checar se precisa rodar push+deploy de novo antes de considerar
+produção atualizada.
+
+⚠️ **Gotcha novo descoberto neste deploy:** `vercel --prod` empacota o diretório de trabalho
+LOCAL inteiro, não só o que está commitado no git. Isso publicou `/preview-v13` (rota da
+outra sessão, sem autenticação por causa da exceção dela em `proxy.ts`) em produção, público,
+sem querer. Se for rodar `vercel --prod` de novo, **remover primeiro** qualquer `preview-vN`
+solto no working tree (`git status` mostra) ou garantir que a exceção correspondente não
+está em `src/proxy.ts` sem commit.
 
 **Resumo rápido dos 3 cards mexidos hoje:** Distribuição por Instituição, Resumo Anual —
 Vencimento vs. Gerado, e Investimentos a Vencer — todos viraram tabela com IR calculado e
 sanfona (Instituição → Investimento, ou Ano → Instituição → Investimento no caso do Resumo
 Anual), usando o mesmo formato de nome de investimento (`Tipo Ativo Indexador - Taxa%`).
 
-**Depois disso, mais uma rodada de ajustes finos (commit mais recente):** legenda do gráfico
-"Alocação %" reorganizada em grade própria (não é mais o `<Legend>` do Recharts), raio da
-pizza reduzido ~5% + conteúdo centralizado verticalmente no card, gráfico de barras do modal
-"Cobertura FGC" corrigido pra mostrar todas as instituições (Recharts escondia rótulos por
-falta de espaço), o KPI "Cobertura FGC" redesenhado (fundo verde/vermelho claro por estado,
-mostra banco + investimento em risco em vez de só a contagem), e "Valor Projetado Líquido"
-(com IR) adicionado no modal e no e-mail do Simulador Selic. Também gerei uma página de
-revisão dos 3 e-mails de alerta (ver item abaixo).
+**Depois disso, mais uma rodada de ajustes finos:** legenda do gráfico "Alocação %"
+reorganizada em grade própria (não é mais o `<Legend>` do Recharts), raio da pizza reduzido
+~5% + conteúdo centralizado verticalmente no card, gráfico de barras do modal "Cobertura FGC"
+corrigido pra mostrar todas as instituições (Recharts escondia rótulos por falta de espaço),
+o KPI "Cobertura FGC" redesenhado (fundo verde/vermelho claro por estado, mostra banco +
+investimento em risco em vez de só a contagem), e "Valor Projetado Líquido" (com IR)
+adicionado no modal e no e-mail do Simulador Selic. Também gerei uma página de revisão dos 3
+e-mails de alerta (ver item 8). **Esse foi o conteúdo enviado a produção.**
+
+**Depois do deploy, mais uma mudança (ainda não commitada/enviada):** cards "Resumo Anual —
+Vencimento vs. Gerado" e "Investimentos a Vencer" agora ocupam metade da tela cada
+(`w:6`/`w:6` no grid de 12 colunas — antes era `w:8`/`w:4`). Ver item 9.
 
 ---
 
@@ -166,6 +180,13 @@ fallback do stack já declarado inline nos e-mails) e o bug sumiu. Esse arquivo 
 `architecture/` fora do fluxo normal de commit/deploy — é só documentação/referência, pode
 reabrir e republicar como Artifact se quiser atualizar depois.
 
+### 9. Cards "Resumo Anual" e "Investimentos a Vencer" com a mesma largura
+Usuário achou estranho os dois cards lado a lado (mesma linha do grid) terem larguras
+diferentes. `DashboardTopLayout.tsx`, `lgLayout`: `chartBar` foi de `w:8` pra `w:6`,
+`saldoList` foi de `w:4,x:8` pra `w:6,x:6` — agora cada um ocupa exatamente metade das 12
+colunas. **Não mexi no `stackedLayout`** (breakpoints menores) porque lá os dois já usam
+`w:cols` (largura total, empilhados) — não tinha o mesmo problema.
+
 ---
 
 ## ⚠️ Outra sessão mexendo no mesmo projeto ao mesmo tempo
@@ -212,10 +233,16 @@ antes de mexer nesses arquivos de novo, pra não pisar no trabalho um do outro.
 6. **Duas sessões no mesmo repo ao mesmo tempo** exige cuidado extra ao commitar: sempre
    `git diff HEAD -- <arquivo>` antes de `git add`, pra não commitar mudança de outra sessão
    sem querer. Ver seção acima sobre `vencimento.ts`/`proxy.ts`.
+7. **`git push`/`vercel --prod` só rodam quando o usuário pede explicitamente** (ele pediu
+   nesta sessão, ver topo do arquivo). `vercel --prod --yes` às vezes retorna
+   `"Not authorized"` na 1ª tentativa — rodar de novo resolve (aconteceu de novo hoje, é
+   consistente o suficiente pra não investigar mais, só repetir o comando). E lembrar do
+   gotcha do item acima: ele deploya o working tree local, não só o git.
 
 ## Não fiz
 
-- Não dei `git push` nem `vercel --prod` — só commit local, aguardando instrução.
+- Não dei `git push`/`vercel --prod` da última mudança (item 9, cards de mesma largura) —
+  fiz só até o commit local; o usuário ainda não pediu pra enviar essa parte.
 - Não commitei a maior parte do trabalho da outra sessão (`InvestimentosAVencerV2.tsx`,
   `preview-v13`, a exceção dela em `proxy.ts`) — só os campos de `vencimento.ts`/
   `alertas-vencimento/test/route.ts` que viraram pré-requisito de compilação do nosso
