@@ -1,38 +1,44 @@
-# Plano de Etapas e Tarefas (task_plan.md)
+# Plano do Projeto: Dashboard de Investimentos (invest-vrsbueno-v3)
 
-## 📌 Objetivo Geral
-Desenvolver e validar localmente um Dashboard de Investimentos baseado no Google Material Design 3 (M3), que leia os dados da planilha `INVEST_R2.xlsx` (ou migrados para banco de dados suportado pela Vercel) e apresente:
-1. Resumo anual dos rendimentos.
-2. Posição diária estimada de cada CDB/LCA/LCI.
-3. Distribuição por Instituição (Banco).
-4. Alerta de limite FGC (R$ 250 mil de rendimento bruto por instituição).
+## Visão
+Dashboard de investimentos pessoal (CDB/LCA/LCI/LF) para acompanhar a carteira de forma visual e resumida, com posição diária estimada calculada dinamicamente (não a partir de colunas estáticas da planilha original), alertas de limite FGC (R$ 250 mil por instituição) e ferramentas de simulação. Sucesso = dados sempre corretos e atualizados, acesso protegido por login, e a informação certa (rendimento bruto/líquido, vencimentos, cobertura FGC) visível sem esforço.
 
----
+## Escopo
+### Dentro
+- Dashboard com KPIs, gráficos (Recharts) e tabelas com sanfona (Instituição/Ano → Investimento)
+- CRUD completo de investimentos (`/editar-ativos`), com confirmação antes de cada escrita
+- Login + 2FA opcional (Supabase Auth)
+- Alertas por e-mail (FGC, vencimento) e Simulador Selic (com PDF e e-mail)
+- Cálculo de IR via tabela regressiva
 
-## 🎯 Fases do Projeto (Protocolo V.L.A.E.G.)
+### Fora
+- Coleta automática de dados via webhook/API externa (fonte é a planilha migrada para Supabase, não uma integração ao vivo)
+- Qualquer automação de trade ou ação financeira real
 
-### Fase 1: V - Visão & Descoberta
-- [x] Ler e internalizar diretrizes de `gemini.md` e `VLAEG.md`.
-- [x] Criar arquivos de memória, planejamento e resumo de referência (`task_plan.md`, `findings.md`, `progress.md`).
-- [x] Acesso à fonte de dados: Usuário forneceu arquivo `INVEST_R2.csv`.
-- [x] Definir o JSON Data Schema oficial (Payload de Entrada e Saída) em `gemini.md`.
-- [x] Resposta às 5 perguntas de descoberta V.L.A.E.G. pelo usuário.
+## Critérios de Aceite
+- [x] Login obrigatório funcionando em produção
+- [x] CRUD de investimentos com confirmação antes de escrever no Supabase
+- [x] Alertas de FGC e vencimento por e-mail configurados
+- [x] Simulador Selic com PDF e e-mail
+- [x] Dashboard com KPIs, distribuição por instituição, resumo anual, investimentos a vencer
+- [x] `npx tsc --noEmit` limpo e produção sincronizada com `main` (confirmado em 2026-09-04)
+- [ ] Consolidar cálculo de IR e nome do investimento em utils compartilhados (hoje duplicado em vários componentes)
 
-### Fase 2: L - Link (Conectividade & Dados)
-- [/] Ler e analisar arquivo `INVEST_R2.csv`.
-- [ ] Testar leitura e parsing determinístico dos dados dos ativos (CDB, LCA, LCI).
-- [ ] Criar scripts/módulos de parser para cálculo da posição diária estimada e rendimentos.
+## Arquitetura Técnica
+- Next.js 16.3.4 (App Router) + React 19 + TypeScript, deploy no Vercel, dados no Supabase (Postgres + Auth).
+- `src/app/DashboardClient.tsx` monta o grid (`react-grid-layout`) que renderiza os cards definidos em `src/components/DashboardTopLayout.tsx`.
+- Lógica de negócio (IR, agrupamento por instituição/vencimento, cálculo Selic) em `src/utils/` (`fgc.ts`, `vencimento.ts`, `selic.ts`).
+- Rotas de API (`src/app/api/`) para envio de alertas e e-mails (selic, alertas-fgc, alertas-vencimento).
+- Proteção de rotas via `src/proxy.ts` (Supabase Auth, cookies).
 
-### Fase 3: A - Arquitetura (Construção das Camadas)
-- [ ] Definir POPs na pasta `architecture/`.
-- [ ] Estruturar regras de cálculo determinísticas (CDB Pré/Pós, LCA/LCI, CDI, limites FGC).
-- [ ] Definir modelagem do banco de dados (ex: SQLite local / Postgres/Vercel Postgres/Supabase/Neon).
-
-### Fase 4: E - Estilo (Frontend M3 Design System)
-- [ ] Implementar Design System baseado em Material Design 3 (M3 - Google).
-- [ ] Componentes M3: Cards, Top Bar, Navigation Drawer/Rail, Charts com paleta M3 e tema Dark/Light.
-- [ ] Painéis de Resumo Anual, Posição Diária Estimada, Distribuição por Banco e Alerta FGC (R$ 250k).
-
-### Fase 5: G - Gatilho & Validação Local
-- [ ] Validação local completa do Dashboard.
-- [ ] Documentação de deploy no `gemini.md` e finalização.
+## Checklist de Tarefas
+- [x] Migrar fonte de dados da planilha para Supabase
+- [x] Implementar cálculo dinâmico de posição/rendimento (não usar colunas estáticas HOJE/RENDIMENTO)
+- [x] Dashboard com KPIs, gráficos e tabelas
+- [x] Navbar sticky/glassmorphism aplicada em produção (`architecture/STATUS_2026-09-03_sessao_completa.md`)
+- [x] CRUD "Editar Ativos" com escrita real no Supabase (RLS `authenticated`)
+- [x] Login + 2FA opcional
+- [x] Alertas por e-mail (FGC + vencimento) e Simulador Selic com PDF/e-mail
+- [x] Cards de tabela com sanfona e IR (Distribuição, Resumo Anual, Investimentos a Vencer) — sessão 2026-09-04
+- [ ] Extrair `nomeInvestimento` e cálculo de IR duplicados para um util compartilhado
+- [x] Resolver arquivos órfãos de outra sessão em paralelo (removidos em 2026-09-04, com confirmação do usuário)

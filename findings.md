@@ -48,3 +48,10 @@ Referência: https://m3.material.io
 ## ⚠️ Regras de Negócio e Invariantes
 1. **Posição Diária Estimada:** Deve ser calculada dinamicamente via lógica determinística (não via colunas estáticas `HOJE`/`RENDIMENTO`).
 2. **Limite FGC:** R$ 250.000,00 de saldo/rendimento bruto por Instituição financeira. Exibir alertas visuais quando o montante acumulado por instituição atingir ou se aproximar desse limite.
+
+---
+
+## 2026-09-04 — Migração para o Protocolo Spec-Driven
+**Fonte:** `spec-driven.md` fornecido pelo usuário, substitui o Protocolo V.L.A.E.G. (`VLAEG.md`)
+**Descoberta:** O projeto já tinha um ciclo equivalente (V.L.A.E.G.) com `gemini.md` como constituição e `VLAEG.md` como protocolo, mas ficou desatualizado — `task_plan.md` ainda descrevia a Fase 2 (parsing do CSV) como em andamento, enquanto o projeto já está em produção com CRUD, autenticação, alertas por e-mail e Simulador Selic.
+**Impacto no projeto:** Conteúdo de `gemini.md` (schema de dados, regras de negócio) foi absorvido em `constitution.md`. `gemini.md` e `VLAEG.md` foram removidos por ficarem redundantes. `task_plan.md` foi reescrito para refletir o estado real do projeto.
