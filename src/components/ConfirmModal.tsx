@@ -35,7 +35,7 @@ export function ConfirmModal({
           <button
             onClick={onConfirm}
             disabled={carregando}
-            style={{ flex: 1, padding: '11px', background: corConfirmar, border: 'none', color: '#fff', borderRadius: '8px', cursor: carregando ? 'default' : 'pointer', fontWeight: 600, fontSize: '0.85rem', opacity: carregando ? 0.6 : 1 }}
+            style={{ flex: 1, padding: '11px', background: corConfirmar, border: '1px solid transparent', color: '#fff', borderRadius: '8px', cursor: carregando ? 'default' : 'pointer', fontWeight: 600, fontSize: '0.85rem', opacity: carregando ? 0.6 : 1 }}
           >
             {carregando ? 'Salvando...' : textoConfirmar}
           </button>

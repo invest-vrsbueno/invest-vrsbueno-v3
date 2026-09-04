@@ -184,8 +184,8 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
       <td style={{ padding: '8px' }}><input type="date" value={rascunho.data_aplicacao} onChange={(e) => setRascunho({ ...rascunho, data_aplicacao: e.target.value })} style={inputStyle} /></td>
       <td style={{ padding: '8px' }}><input type="date" value={rascunho.data_vencimento || ''} onChange={(e) => setRascunho({ ...rascunho, data_vencimento: e.target.value })} style={inputStyle} /></td>
       <td style={{ padding: '8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, zIndex: 1, background: 'var(--dark-popover)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
-        <button onClick={pedirConfirmacaoSalvar} title="Salvar" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#10b981', marginRight: '8px' }}><Check size={18} /></button>
-        <button onClick={cancelarEdicao} title="Cancelar" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#8b8fa8' }}><X size={18} /></button>
+        <button onClick={pedirConfirmacaoSalvar} title="Salvar" style={{ background: 'transparent', border: '1px solid transparent', borderRadius: '6px', padding: '4px', cursor: 'pointer', color: '#10b981', marginRight: '8px' }}><Check size={18} /></button>
+        <button onClick={cancelarEdicao} title="Cancelar" style={{ background: 'transparent', border: '1px solid transparent', borderRadius: '6px', padding: '4px', cursor: 'pointer', color: '#8b8fa8' }}><X size={18} /></button>
       </td>
     </tr>
   );
@@ -203,7 +203,7 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
           <button
             onClick={iniciarNovo}
             disabled={editingId !== null}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#3b82f6', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: editingId !== null ? 'default' : 'pointer', opacity: editingId !== null ? 0.5 : 1 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#3b82f6', color: '#fff', border: '1px solid transparent', padding: '10px 20px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: editingId !== null ? 'default' : 'pointer', opacity: editingId !== null ? 0.5 : 1 }}
           >
             <Plus size={18} strokeWidth={3} /> Adicionar Investimento
           </button>
@@ -246,8 +246,8 @@ export default function EditarAtivosClient({ initialData }: { initialData: Inves
                     <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>{formatDataBR(item.data_aplicacao)}</td>
                     <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>{formatDataBR(item.data_vencimento)}</td>
                     <td style={{ padding: '10px 8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, zIndex: 1, background: 'var(--dark-card)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
-                      <button onClick={() => iniciarEdicao(item)} disabled={editingId !== null} title="Editar" style={{ background: 'transparent', border: 'none', cursor: editingId !== null ? 'default' : 'pointer', color: '#8b8fa8', marginRight: '10px', opacity: editingId !== null ? 0.4 : 1 }}><Pencil size={16} /></button>
-                      <button onClick={() => pedirConfirmacaoRemover(item)} disabled={editingId !== null} title="Remover" style={{ background: 'transparent', border: 'none', cursor: editingId !== null ? 'default' : 'pointer', color: '#ef4444', opacity: editingId !== null ? 0.4 : 1 }}><Trash2 size={16} /></button>
+                      <button onClick={() => iniciarEdicao(item)} disabled={editingId !== null} title="Editar" style={{ background: 'transparent', border: '1px solid transparent', borderRadius: '6px', padding: '4px', cursor: editingId !== null ? 'default' : 'pointer', color: '#8b8fa8', marginRight: '10px', opacity: editingId !== null ? 0.4 : 1 }}><Pencil size={16} /></button>
+                      <button onClick={() => pedirConfirmacaoRemover(item)} disabled={editingId !== null} title="Remover" style={{ background: 'transparent', border: '1px solid transparent', borderRadius: '6px', padding: '4px', cursor: editingId !== null ? 'default' : 'pointer', color: '#ef4444', opacity: editingId !== null ? 0.4 : 1 }}><Trash2 size={16} /></button>
                     </td>
                   </tr>
                 )

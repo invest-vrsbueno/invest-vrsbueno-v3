@@ -21,6 +21,7 @@ export default async function RedefinirSenhaPage() {
             solicite um novo.
           </p>
           <a
+            className="btn"
             href="/login"
             style={{ display: 'block', textAlign: 'center', padding: '12px', background: '#1a1d27', border: '1px solid #323546', color: '#fff', borderRadius: '8px', fontWeight: 600, textDecoration: 'none' }}
           >

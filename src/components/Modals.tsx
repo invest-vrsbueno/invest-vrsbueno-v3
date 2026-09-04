@@ -162,7 +162,7 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
               <button onClick={baixarPdf} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--dark-card)', color: 'var(--dark-fg)', border: '1px solid var(--dark-border)', padding: '11px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
                 <Download size={16} /> Download PDF
               </button>
-              <button onClick={enviarPorEmail} disabled={enviandoEmail} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--accent-blue)', color: '#fff', border: 'none', padding: '11px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: enviandoEmail ? 'default' : 'pointer', opacity: enviandoEmail ? 0.6 : 1 }}>
+              <button onClick={enviarPorEmail} disabled={enviandoEmail} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--accent-blue)', color: '#fff', border: '1px solid transparent', padding: '11px 18px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: enviandoEmail ? 'default' : 'pointer', opacity: enviandoEmail ? 0.6 : 1 }}>
                 <Mail size={16} /> {enviandoEmail ? 'Enviando...' : 'Enviar por e-mail'}
               </button>
               {statusEmail === 'ok' && <span style={{ color: '#10b981', fontSize: '0.8rem' }}>E-mail enviado.</span>}

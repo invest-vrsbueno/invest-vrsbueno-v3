@@ -71,6 +71,16 @@ body {
   outline-offset: 2px;
 }
 
+/* Borda verde no hover de qualquer botão — !important necessário para sobrepor a cor
+   de borda definida via inline style (border shorthand) em cada botão do app; não afeta
+   width/style da borda, só a cor, então não há salto de layout. Botões sem borda própria
+   (ex.: CTAs sólidos) já recebem uma borda transparente de 1px na origem para o mesmo motivo. */
+button:not(:disabled):hover,
+a.btn:hover {
+  border-color: var(--dark-ring) !important;
+  transition: border-color 0.15s ease;
+}
+
 /* Reusable Components */
 .grid-card {
   background: rgba(255,255,255,0.55);
