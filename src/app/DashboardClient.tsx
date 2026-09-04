@@ -6,7 +6,7 @@ import { Calculator, LogOut, ShieldCheck, Pencil, Menu, X } from 'lucide-react';
 import { calculateAsset, generateEvolutionCurve } from '../utils/finance';
 import { createClient } from '../utils/supabase/client';
 import { agruparPorInstituicaoFGC, LIMIT_FGC } from '../utils/fgc';
-import { investimentosPorVencimento } from '../utils/vencimento';
+import { investimentosPorVencimento, agruparPorAnoVencimento } from '../utils/vencimento';
 import { DashboardTopLayout } from '../components/DashboardTopLayout';
 import { ModalSelic } from '../components/Modals';
 import { Mfa2FAAlert } from '../components/Mfa2FAAlert';
@@ -67,6 +67,8 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
     return acc;
   }, {});
   const barData = Object.values(byYear).sort((a: any, b: any) => parseInt(a.name) - parseInt(b.name));
+
+  const anoVencimentoArray = useMemo(() => agruparPorAnoVencimento(data), [data]);
 
   const evolutionData = useMemo(() => {
     if(data.length === 0) return [];
@@ -198,7 +200,7 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
         saldoCaixaMock={saldoCaixaMock} instComRisco={instComRisco}
         formatBRL={formatBRL} CORES={CORES}
         evolutionData={evolutionData} byInstArray={byInstArray}
-        barData={barData} LIMIT_FGC={LIMIT_FGC}
+        barData={barData} anoVencimentoArray={anoVencimentoArray} LIMIT_FGC={LIMIT_FGC}
         investimentosVencendo={investimentosVencendo}
       />
 

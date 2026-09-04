@@ -5,13 +5,13 @@ import { Lock, FileText, BarChart3, Settings2, X } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell, BarChart, Bar, Legend, ComposedChart, Line } from 'recharts';
 import { FgcDetalhe } from './FgcDetalhe';
 import { InvestimentosAVencer } from './InvestimentosAVencer';
-import { ResumoAnualChart } from './ResumoAnualChart';
+import { ResumoAnualChartV2 } from './ResumoAnualChartV2';
 import { DistribuicaoInstituicoes } from './DistribuicaoInstituicoes';
 
 export function DashboardTopLayout({
   patrimonioTotal, totalAplicado, rendAcumulado, projVencimento,
   saldoCaixaMock, instComRisco, formatBRL, CORES,
-  evolutionData, byInstArray, barData, LIMIT_FGC, investimentosVencendo
+  evolutionData, byInstArray, barData, anoVencimentoArray, LIMIT_FGC, investimentosVencendo
 }: any) {
   const [width, setWidth] = React.useState(1200);
   const [showFgcModal, setShowFgcModal] = React.useState(false);
@@ -43,10 +43,10 @@ export function DashboardTopLayout({
     { i: 'chartArea', x: 0, y: 4, w: 8, h: 10 },
     { i: 'chartPie', x: 8, y: 4, w: 4, h: 10 },
 
-    { i: 'chartBar', x: 0, y: 14, w: 8, h: 13 },
-    { i: 'saldoList', x: 8, y: 14, w: 4, h: 13 },
+    { i: 'chartBar', x: 0, y: 14, w: 8, h: 16 },
+    { i: 'saldoList', x: 8, y: 14, w: 4, h: 16 },
 
-    { i: 'distList', x: 0, y: 27, w: 12, h: 14 }
+    { i: 'distList', x: 0, y: 30, w: 12, h: 14 }
   ];
 
   // Breakpoints menores precisam de um layout PRÓPRIO e explícito: o react-grid-layout
@@ -65,7 +65,7 @@ export function DashboardTopLayout({
     });
     y += 4;
     const panels: [string, number][] = [
-      ['chartArea', 10], ['chartPie', 10], ['chartBar', 13], ['saldoList', 13], ['distList', 14],
+      ['chartArea', 10], ['chartPie', 10], ['chartBar', 16], ['saldoList', 16], ['distList', 14],
     ];
     panels.forEach(([id, h]) => {
       items.push({ i: id, x: 0, y, w: cols, h });
@@ -167,9 +167,9 @@ export function DashboardTopLayout({
           </div>
         </div>
 
-        <div key="chartBar" className="grid-card" style={{ overflow: 'auto' }}>
+        <div key="chartBar" className="grid-card">
           <div className="grid-card-header"><span className="grid-card-title">RESUMO ANUAL — VENCIMENTO VS. GERADO</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
-          <ResumoAnualChart barData={barData} formatBRL={formatBRL} />
+          <ResumoAnualChartV2 barData={barData} anoVencimentoArray={anoVencimentoArray} formatBRL={formatBRL} />
         </div>
 
         <div key="saldoList" className="grid-card">
