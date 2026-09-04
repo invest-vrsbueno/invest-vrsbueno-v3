@@ -79,7 +79,7 @@ export function ModalSelic({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(6,7,10,0.99)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}>
       <div style={{ background: 'var(--dark-popover)', padding: 'clamp(16px, 4vw, 24px)', borderRadius: '12px', width: 'min(900px, 100%)', maxHeight: '90vh', overflowY: 'auto', border: '1px solid var(--dark-border)', color: 'var(--dark-fg)', boxShadow: 'var(--dark-shadow-popover)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
           <h2 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Simulador Avançado de Projeções (Meta Selic)</h2>

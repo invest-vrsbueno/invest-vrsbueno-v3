@@ -6,6 +6,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceL
 import { FgcDetalhe } from './FgcDetalhe';
 import { InvestimentosAVencer } from './InvestimentosAVencer';
 import { ResumoAnualChart } from './ResumoAnualChart';
+import { DistribuicaoInstituicoes } from './DistribuicaoInstituicoes';
 
 export function DashboardTopLayout({
   patrimonioTotal, totalAplicado, rendAcumulado, projVencimento,
@@ -45,7 +46,7 @@ export function DashboardTopLayout({
     { i: 'chartBar', x: 0, y: 14, w: 8, h: 13 },
     { i: 'saldoList', x: 8, y: 14, w: 4, h: 13 },
 
-    { i: 'distList', x: 0, y: 27, w: 12, h: 10 }
+    { i: 'distList', x: 0, y: 27, w: 12, h: 14 }
   ];
 
   // Breakpoints menores precisam de um layout PRÓPRIO e explícito: o react-grid-layout
@@ -64,7 +65,7 @@ export function DashboardTopLayout({
     });
     y += 4;
     const panels: [string, number][] = [
-      ['chartArea', 10], ['chartPie', 10], ['chartBar', 13], ['saldoList', 13], ['distList', 10],
+      ['chartArea', 10], ['chartPie', 10], ['chartBar', 13], ['saldoList', 13], ['distList', 14],
     ];
     panels.forEach(([id, h]) => {
       items.push({ i: id, x: 0, y, w: cols, h });
@@ -178,29 +179,14 @@ export function DashboardTopLayout({
 
         <div key="distList" className="grid-card">
            <div className="grid-card-header"><span className="grid-card-title">DISTRIBUIÇÃO POR INSTITUIÇÃO</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
-          <div style={{ padding: '0 16px', overflowY: 'auto', flex: 1 }}>
-            {byInstArray.map((inst: any, i: number) => (
-               <div key={inst.name} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', borderBottom: '1px solid #e2e4f0' }}>
-                 <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: CORES[i%CORES.length], color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
-                   {inst.name.substring(0,2)}
-                 </div>
-                 <div>
-                   <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{inst.name}</div>
-                   <div style={{ fontSize: '0.7rem', color: '#8b8fa8' }}>{((inst.value / patrimonioTotal) * 100).toFixed(0)}% do portfólio</div>
-                 </div>
-                 <div style={{ marginLeft: 'auto', fontWeight: 700, fontSize: '0.85rem' }}>
-                   {formatBRL(inst.value)}
-                 </div>
-               </div>
-            ))}
-          </div>
+          <DistribuicaoInstituicoes byInstArray={byInstArray} patrimonioTotal={patrimonioTotal} CORES={CORES} />
         </div>
 
       </ResponsiveGridLayout>
       </div>
 
       {showFgcModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }} onClick={() => setShowFgcModal(false)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(6,7,10,0.99)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }} onClick={() => setShowFgcModal(false)}>
           <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: 'min(640px, 100%)', maxHeight: '85vh', overflowY: 'auto', border: '1px solid #d1d5db' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span className="grid-card-title">COBERTURA FGC POR INSTITUIÇÃO</span>

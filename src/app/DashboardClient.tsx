@@ -43,7 +43,7 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
   const projVencimento = data.reduce((acc, obj) => acc + obj.projetadoVencimento, 0);
   const saldoCaixaMock = 101750;
 
-  const byInstArray = useMemo(() => agruparPorInstituicaoFGC(data), [data]);
+  const byInstArray = useMemo(() => agruparPorInstituicaoFGC(data, TODAY), [data]);
   const instComRisco = byInstArray.filter(i => i.value >= LIMIT_FGC).length;
 
   const investimentosVencendo = useMemo(() => investimentosPorVencimento(data, TODAY), [data]);

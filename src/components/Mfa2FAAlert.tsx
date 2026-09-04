@@ -20,7 +20,7 @@ export function Mfa2FAAlert() {
   if (temFatorAtivo !== false || fechadoNestaSessao) return null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(6,7,10,0.99)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}>
       <div style={{ background: 'var(--dark-popover)', padding: '28px', borderRadius: '12px', width: 'min(380px, 100%)', maxHeight: '90vh', overflowY: 'auto', border: '1px solid var(--dark-warning)', color: 'var(--dark-fg)', boxShadow: 'var(--dark-shadow-popover)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
           <ShieldAlert size={20} color="var(--dark-warning)" />
