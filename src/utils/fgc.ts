@@ -23,6 +23,8 @@ export interface InvestimentoFGC {
   id: string;
   emissor: string;
   tipo: string;
+  indexador_tipo: string;
+  taxa: number;
   posicaoHoje: number;
   valorAplicado: number;
   rendimentoBruto: number;
@@ -66,6 +68,8 @@ export function agruparPorInstituicaoFGC(dataEnriquecida: any[], hoje: Date = ne
       id: obj.id,
       emissor: obj.emissor,
       tipo: obj.tipo,
+      indexador_tipo: obj.indexador_tipo,
+      taxa: obj.taxa,
       posicaoHoje: obj.posicaoHoje,
       valorAplicado: obj.aplicado,
       rendimentoBruto,

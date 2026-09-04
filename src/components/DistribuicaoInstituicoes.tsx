@@ -2,10 +2,18 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import type { InstituicaoFGC } from '../utils/fgc';
+import type { InstituicaoFGC, InvestimentoFGC } from '../utils/fgc';
 
 function formatBRL(val: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
+}
+
+function formatTaxa(taxa: number) {
+  return taxa.toFixed(2).replace('.', ',');
+}
+
+function nomeInvestimento(invest: InvestimentoFGC) {
+  return `${invest.tipo} ${invest.emissor} ${invest.indexador_tipo} - ${formatTaxa(invest.taxa)}%`;
 }
 
 const colHeaderStyle: React.CSSProperties = { textAlign: 'right', fontSize: '0.68rem', fontWeight: 700, color: '#8b8fa8', textTransform: 'uppercase', padding: '0 4px' };
@@ -57,8 +65,8 @@ export function DistribuicaoInstituicoes({ byInstArray, patrimonioTotal, CORES }
                   style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.3fr 1.3fr 1fr', gap: '4px', alignItems: 'center', padding: '8px 4px', borderBottom: '1px solid #e2e4f0', background: '#f8f9fc' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '15px', borderLeft: '2px solid #d1d5db', marginLeft: '15px', minWidth: 0 }}>
-                    <span style={{ fontSize: '0.78rem', color: '#1a1d27', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {invest.emissor} <span style={{ color: '#8b8fa8' }}>({invest.tipo})</span>
+                    <span style={{ fontSize: '0.78rem', color: '#1a1d27', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {nomeInvestimento(invest)}
                     </span>
                   </div>
                   <span style={{ ...colValStyle, fontWeight: 500, fontSize: '0.75rem' }}>{formatBRL(invest.valorAplicado)}</span>

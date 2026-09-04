@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { ResponsiveContainer, BarChart, XAxis, Tooltip, Bar, Legend } from 'recharts';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import type { AnoVencimento } from '../utils/vencimento';
+import type { AnoVencimento, InvestimentoAno } from '../utils/vencimento';
 
 const colHeaderStyle: React.CSSProperties = { textAlign: 'right', fontSize: '0.68rem', fontWeight: 700, color: '#8b8fa8', textTransform: 'uppercase', padding: '0 4px' };
 const colValStyle: React.CSSProperties = { textAlign: 'right', fontSize: '0.8rem', fontWeight: 600, padding: '0 4px', whiteSpace: 'nowrap' };
@@ -11,6 +11,14 @@ const colValStyle: React.CSSProperties = { textAlign: 'right', fontSize: '0.8rem
 function formatDataBR(iso: string) {
   const [y, m, d] = iso.slice(0, 10).split('-');
   return `${d}/${m}/${y}`;
+}
+
+function formatTaxa(taxa: number) {
+  return taxa.toFixed(2).replace('.', ',');
+}
+
+function nomeInvestimento(invest: InvestimentoAno) {
+  return `${invest.tipo} ${invest.emissor} ${invest.indexador_tipo} - ${formatTaxa(invest.taxa)}%`;
 }
 
 export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: { barData: any[]; anoVencimentoArray: AnoVencimento[]; formatBRL: (v: number) => string }) {
@@ -44,7 +52,7 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
             <div key={ano.name}>
               <div
                 onClick={() => { setAnoAberto(anoIsOpen ? null : ano.name); setInstAberta(null); }}
-                style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1.3fr', gap: '4px', alignItems: 'center', padding: '10px 4px', borderBottom: '1px solid #e2e4f0', cursor: 'pointer' }}
+                style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '4px', alignItems: 'center', padding: '10px 4px', borderBottom: '1px solid #e2e4f0', cursor: 'pointer' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ color: '#00bfa5', fontWeight: 700, fontSize: '0.85rem' }}>{ano.name}</span>
@@ -60,7 +68,7 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
                   <div key={inst.name}>
                     <div
                       onClick={() => setInstAberta(instIsOpen ? null : `${ano.name}-${inst.name}`)}
-                      style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1.3fr', gap: '4px', alignItems: 'center', padding: '8px 4px', borderBottom: '1px solid #e2e4f0', background: '#f8f9fc', cursor: 'pointer' }}
+                      style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '4px', alignItems: 'center', padding: '8px 4px', borderBottom: '1px solid #e2e4f0', background: '#f8f9fc', cursor: 'pointer' }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '15px', borderLeft: '2px solid #d1d5db', marginLeft: '8px', minWidth: 0 }}>
                         <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1a1d27' }}>{inst.name}</span>
@@ -73,11 +81,11 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
                     {instIsOpen && inst.investimentos.map((invest) => (
                       <div
                         key={invest.id}
-                        style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr 1.3fr', gap: '4px', alignItems: 'center', padding: '7px 4px', borderBottom: '1px solid #e2e4f0', background: '#f0f1f7' }}
+                        style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '4px', alignItems: 'center', padding: '7px 4px', borderBottom: '1px solid #e2e4f0', background: '#f0f1f7' }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', paddingLeft: '15px', borderLeft: '2px solid #d1d5db', marginLeft: '24px', minWidth: 0 }}>
                           <span style={{ fontSize: '0.72rem', color: '#1a1d27', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {invest.emissor} <span style={{ color: '#8b8fa8' }}>({formatDataBR(invest.data_vencimento)})</span>
+                            {nomeInvestimento(invest)} <span style={{ color: '#8b8fa8' }}>({formatDataBR(invest.data_vencimento)})</span>
                           </span>
                         </div>
                         <span style={{ ...colValStyle, fontWeight: 500, fontSize: '0.72rem' }}>{formatBRL(invest.venceBruto)}</span>

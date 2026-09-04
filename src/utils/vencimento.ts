@@ -6,8 +6,13 @@ export interface InvestimentoVencendo {
   id: string;
   emissor: string;
   tipo: string;
+  indexador_tipo: string;
+  taxa: number;
   instituicao_agrupadora: string;
   posicaoHoje: number;
+  rendimentoBruto: number;
+  rendimentoLiquido: number;
+  valorLiquido: number;
   data_vencimento: string;
   diasRestantes: number;
 }
@@ -23,12 +28,21 @@ export function investimentosPorVencimento(dataEnriquecida: any[], today: Date):
     .map((item) => {
       const venc = new Date(item.data_vencimento);
       const diasRestantes = Math.round((venc.getTime() - hojeSemHora.getTime()) / (1000 * 60 * 60 * 24));
+      const rendimentoBruto: number = item.rendimentoAcumulado ?? Math.max(0, item.posicaoHoje - item.aplicado);
+      const aliquota = aliquotaIR(item.tipo, item.data_aplicacao, today);
+      const rendimentoLiquido = rendimentoBruto - rendimentoBruto * aliquota;
+      const valorLiquido = item.posicaoHoje - rendimentoBruto * aliquota;
       return {
         id: item.id,
         emissor: item.emissor,
         tipo: item.tipo,
+        indexador_tipo: item.indexador_tipo,
+        taxa: item.taxa,
         instituicao_agrupadora: item.instituicao_agrupadora,
         posicaoHoje: item.posicaoHoje,
+        rendimentoBruto,
+        rendimentoLiquido,
+        valorLiquido,
         data_vencimento: item.data_vencimento,
         diasRestantes,
       };
@@ -40,6 +54,8 @@ export interface InvestimentoAno {
   id: string;
   emissor: string;
   tipo: string;
+  indexador_tipo: string;
+  taxa: number;
   data_vencimento: string;
   venceBruto: number;
   venceLiquido: number;
@@ -88,6 +104,8 @@ export function agruparPorAnoVencimento(dataEnriquecida: any[]): AnoVencimento[]
       id: obj.id,
       emissor: obj.emissor,
       tipo: obj.tipo,
+      indexador_tipo: obj.indexador_tipo,
+      taxa: obj.taxa,
       data_vencimento: obj.data_vencimento,
       venceBruto: obj.projetadoVencimento,
       venceLiquido,

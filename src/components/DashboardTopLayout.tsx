@@ -4,7 +4,7 @@ import { ResponsiveGridLayout } from 'react-grid-layout';
 import { Lock, FileText, BarChart3, Settings2, X } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell, BarChart, Bar, Legend, ComposedChart, Line } from 'recharts';
 import { FgcDetalhe } from './FgcDetalhe';
-import { InvestimentosAVencer } from './InvestimentosAVencer';
+import { InvestimentosAVencerV3 } from './InvestimentosAVencerV3';
 import { ResumoAnualChartV2 } from './ResumoAnualChartV2';
 import { DistribuicaoInstituicoes } from './DistribuicaoInstituicoes';
 
@@ -174,7 +174,7 @@ export function DashboardTopLayout({
 
         <div key="saldoList" className="grid-card">
            <div className="grid-card-header"><span className="grid-card-title">INVESTIMENTOS A VENCER</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
-          <InvestimentosAVencer investimentos={investimentosVencendo} />
+          <InvestimentosAVencerV3 investimentos={investimentosVencendo} />
         </div>
 
         <div key="distList" className="grid-card">

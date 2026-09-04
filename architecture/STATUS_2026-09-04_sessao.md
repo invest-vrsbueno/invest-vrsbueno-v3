@@ -7,6 +7,11 @@
 tudo só commitado localmente até agora, sem `git push`/`vercel --prod`, ver seção "Não fiz"
 abaixo).
 
+**Resumo rápido dos 3 cards mexidos hoje:** Distribuição por Instituição, Resumo Anual —
+Vencimento vs. Gerado, e Investimentos a Vencer — todos viraram tabela com IR calculado e
+sanfona (Instituição → Investimento, ou Ano → Instituição → Investimento no caso do Resumo
+Anual), usando o mesmo formato de nome de investimento (`Tipo Ativo Indexador - Taxa%`).
+
 ---
 
 ## O que foi feito e commitado nesta sessão
@@ -78,6 +83,33 @@ provavelmente era o mock mal montado, não um bug de código. **Se voltar a acon
 dados reais, investigar de novo** — não dei baixa nisso com certeza absoluta, só não
 reapareceu no teste feito.
 
+### 5. Nome completo do investimento nos 3 cards (Tipo + Ativo + Indexador − Taxa%)
+Padrão criado no Resumo Anual e replicado nos outros dois: `${tipo} ${emissor} ${indexador_tipo}
+- ${taxa,2 casas com vírgula}%`, ex.: `CDB Original (XP) PRÉ - 17,36%`. Função `nomeInvestimento`
+duplicada localmente em cada componente (`DistribuicaoInstituicoes.tsx`,
+`ResumoAnualChartV2.tsx`, `InvestimentosAVencerV3.tsx`) — não foi extraída pra um util
+compartilhado, considerar isso se pedirem pra mudar o formato (mudar nos 3 lugares).
+
+### 6. Card "Investimentos a Vencer" — filtro por data + agrupado por banco
+Trocou o dropdown de horizonte por dois `<input type="date">` (inicial/final, filtra por
+`data_vencimento`). Virou sanfona de 2 níveis: **Instituição → Investimento** (mesmo padrão
+dos outros dois cards), com colunas Rend. Bruto / Rend. Líquido (rendimento, não posição).
+
+- [src/components/InvestimentosAVencerV3.tsx](../src/components/InvestimentosAVencerV3.tsx)
+  (novo, substitui `InvestimentosAVencer.tsx`, que foi **removido**).
+- `src/utils/vencimento.ts`: `InvestimentoVencendo`/`investimentosPorVencimento` ganharam
+  `rendimentoBruto`/`rendimentoLiquido` (nosso). **Atenção:** essa mesma interface já tinha
+  sido estendida por outra sessão rodando em paralelo (`indexador_tipo`, `taxa`,
+  `valorLiquido`) — nosso `nomeInvestimento` passou a depender desses campos deles também
+  (tipo/indexador/taxa), então **desta vez não deu pra separar limpo por hunk**: o commit
+  desta sessão inclui a base deles nesses dois campos-específicos porque virou pré-requisito
+  de compilação do que pedimos. Não commitamos o resto do trabalho deles (`preview-v13`,
+  `InvestimentosAVencerV2.tsx`, a exceção correspondente em `proxy.ts`).
+- `src/app/api/alertas-vencimento/test/route.ts`: também commitado por completo pelo mesmo
+  motivo — o mock ali usa `InvestimentoVencendo` e precisava dos campos novos pra compilar.
+  Só adicionamos `rendimentoBruto`/`rendimentoLiquido` no mock; os outros campos
+  (`indexador_tipo`/`taxa`/`valorLiquido`) já estavam lá, adicionados pela outra sessão.
+
 ---
 
 ## ⚠️ Outra sessão mexendo no mesmo projeto ao mesmo tempo
@@ -128,8 +160,13 @@ antes de mexer nesses arquivos de novo, pra não pisar no trabalho um do outro.
 ## Não fiz
 
 - Não dei `git push` nem `vercel --prod` — só commit local, aguardando instrução.
-- Não commitei nada da outra sessão (`InvestimentosAVencerV2.tsx`, `preview-v13`, a parte
-  dela em `vencimento.ts`/`proxy.ts`, `alertas-vencimento/test/route.ts`) — não é meu
-  trabalho pra decidir se está pronto.
+- Não commitei a maior parte do trabalho da outra sessão (`InvestimentosAVencerV2.tsx`,
+  `preview-v13`, a exceção dela em `proxy.ts`) — só os campos de `vencimento.ts`/
+  `alertas-vencimento/test/route.ts` que viraram pré-requisito de compilação do nosso
+  recurso (ver item 6 acima, seção "Nome completo do investimento").
 - Não confirmei com o usuário se "cabeçalho fixo estilo planilha" deve virar padrão em todos
-  os cards com scroll ou só nos dois que já têm colunas (Distribuição e Resumo Anual).
+  os cards com scroll ou só nos que já têm colunas (agora são 3: Distribuição, Resumo Anual
+  e Investimentos a Vencer).
+- Ainda não coordenamos com a outra sessão sobre quem fica com `InvestimentosAVencerV2.tsx`
+  (ficou órfão, sem uso, já que `InvestimentosAVencerV3.tsx` foi o aplicado) — avisar o
+  usuário que pode valer apagar esse arquivo deles se confirmarem que não vão usá-lo.
