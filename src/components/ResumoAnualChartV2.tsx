@@ -42,8 +42,8 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
       <div style={{ padding: '0 16px', overflowY: 'auto', flex: 1, minHeight: 0 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '4px', padding: '8px 4px', borderBottom: '2px solid #e2e4f0', position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
           <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#8b8fa8', textTransform: 'uppercase' }}>Ano</span>
-          <span style={colHeaderStyle}>Vence Bruto (Com IR)</span>
-          <span style={colHeaderStyle}>Vence Líquido (Sem IR)</span>
+          <span style={colHeaderStyle}>Vence Bruto</span>
+          <span style={colHeaderStyle}>Vence Líquido</span>
         </div>
 
         {anoVencimentoArray.map((ano) => {
@@ -81,12 +81,13 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
                     {instIsOpen && inst.investimentos.map((invest) => (
                       <div
                         key={invest.id}
-                        style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '4px', alignItems: 'center', padding: '7px 4px', borderBottom: '1px solid #e2e4f0', background: '#f0f1f7' }}
+                        style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '4px', alignItems: 'center', padding: '8px 4px', borderBottom: '1px solid #e2e4f0', background: '#f0f1f7' }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', paddingLeft: '15px', borderLeft: '2px solid #d1d5db', marginLeft: '24px', minWidth: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: '15px', borderLeft: '2px solid #d1d5db', marginLeft: '24px', minWidth: 0 }}>
                           <span style={{ fontSize: '0.72rem', color: '#1a1d27', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {nomeInvestimento(invest)} <span style={{ color: '#8b8fa8' }}>({formatDataBR(invest.data_vencimento)})</span>
+                            {nomeInvestimento(invest)}
                           </span>
+                          <span style={{ fontSize: '0.65rem', color: '#8b8fa8', marginTop: '1px' }}>vence em {formatDataBR(invest.data_vencimento)}</span>
                         </div>
                         <span style={{ ...colValStyle, fontWeight: 500, fontSize: '0.72rem' }}>{formatBRL(invest.venceBruto)}</span>
                         <span style={{ ...colValStyle, fontWeight: 500, fontSize: '0.72rem' }}>{formatBRL(invest.venceLiquido)}</span>

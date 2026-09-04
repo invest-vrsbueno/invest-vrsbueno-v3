@@ -187,6 +187,19 @@ diferentes. `DashboardTopLayout.tsx`, `lgLayout`: `chartBar` foi de `w:8` pra `w
 colunas. **Não mexi no `stackedLayout`** (breakpoints menores) porque lá os dois já usam
 `w:cols` (largura total, empilhados) — não tinha o mesmo problema.
 
+### 10. Cabeçalhos simplificados + data cortada corrigida (Resumo Anual e Investimentos a Vencer)
+- `ResumoAnualChartV2.tsx`: cabeçalhos das colunas voltaram pra "Vence Bruto"/"Vence
+  Líquido" (sem os parênteses "(Com IR)"/"(Sem IR)" — o usuário achou redundante depois de
+  ver na tela).
+- **Bug real corrigido em dois cards** (`ResumoAnualChartV2.tsx` e
+  `InvestimentosAVencerV3.tsx`): na linha de investimento mais aninhada (dentro do
+  banco), o nome completo (`Tipo Ativo Indexador - Taxa%`) + a data de vencimento entre
+  parênteses ficavam na mesma linha com `whiteSpace: nowrap` — a data (no final da string)
+  cortava primeiro quando o nome era comprido. Fix: data foi pra uma linha própria abaixo
+  do nome ("vence em DD/MM/AAAA"), sempre visível por inteiro independente do tamanho do
+  nome. Se esse padrão de nome+data aparecer em outro lugar no futuro, aplicar a mesma
+  estrutura de 2 linhas em vez de tentar caber tudo numa só.
+
 ---
 
 ## ⚠️ Outra sessão mexendo no mesmo projeto ao mesmo tempo

@@ -108,10 +108,11 @@ export function InvestimentosAVencerV3({ investimentos }: { investimentos: Inves
                   key={inv.id}
                   style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '4px', alignItems: 'center', padding: '8px 4px', borderBottom: '1px solid #e2e4f0', background: '#f8f9fc' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', paddingLeft: '15px', borderLeft: '2px solid #d1d5db', marginLeft: '8px', minWidth: 0 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: '15px', borderLeft: '2px solid #d1d5db', marginLeft: '8px', minWidth: 0 }}>
                     <span style={{ fontSize: '0.75rem', color: '#1a1d27', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {nomeInvestimento(inv)} <span style={{ color: '#8b8fa8' }}>({formatDataBR(inv.data_vencimento)})</span>
+                      {nomeInvestimento(inv)}
                     </span>
+                    <span style={{ fontSize: '0.68rem', color: '#8b8fa8', marginTop: '1px' }}>vence em {formatDataBR(inv.data_vencimento)}</span>
                   </div>
                   <span style={{ ...colValStyle, fontWeight: 500, fontSize: '0.75rem' }}>{formatBRL(inv.rendimentoBruto)}</span>
                   <span style={{ ...colValStyle, fontWeight: 500, fontSize: '0.75rem' }}>{formatBRL(inv.rendimentoLiquido)}</span>
