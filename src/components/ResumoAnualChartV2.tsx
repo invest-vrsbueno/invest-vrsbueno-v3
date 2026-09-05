@@ -7,6 +7,9 @@ import type { AnoVencimento, InvestimentoAno } from '../utils/vencimento';
 
 const colHeaderStyle: React.CSSProperties = { textAlign: 'right', fontSize: '0.68rem', fontWeight: 700, color: '#8b8fa8', textTransform: 'uppercase', padding: '0 4px' };
 const colValStyle: React.CSSProperties = { textAlign: 'right', fontSize: '0.8rem', fontWeight: 600, padding: '0 4px', whiteSpace: 'nowrap' };
+// Coluna líquida em destaque (teal/negrito) — mesma linguagem de hierarquia dos KPIs
+// (bruto = preto, líquido = teal em negrito).
+const colValLiquidoStyle: React.CSSProperties = { ...colValStyle, color: '#00a693', fontWeight: 800 };
 
 function formatDataBR(iso: string) {
   const [y, m, d] = iso.slice(0, 10).split('-');
@@ -59,7 +62,7 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
                   {anoIsOpen ? <ChevronUp size={16} color="#8b8fa8" /> : <ChevronDown size={16} color="#8b8fa8" />}
                 </div>
                 <span style={colValStyle}>{formatBRL(ano.venceBruto)}</span>
-                <span style={colValStyle}>{formatBRL(ano.venceLiquido)}</span>
+                <span style={colValLiquidoStyle}>{formatBRL(ano.venceLiquido)}</span>
               </div>
 
               {anoIsOpen && ano.instituicoes.map((inst) => {
@@ -75,7 +78,7 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
                         {instIsOpen ? <ChevronUp size={14} color="#8b8fa8" /> : <ChevronDown size={14} color="#8b8fa8" />}
                       </div>
                       <span style={{ ...colValStyle, fontSize: '0.78rem' }}>{formatBRL(inst.venceBruto)}</span>
-                      <span style={{ ...colValStyle, fontSize: '0.78rem' }}>{formatBRL(inst.venceLiquido)}</span>
+                      <span style={{ ...colValLiquidoStyle, fontSize: '0.78rem' }}>{formatBRL(inst.venceLiquido)}</span>
                     </div>
 
                     {instIsOpen && inst.investimentos.map((invest) => (
@@ -90,7 +93,7 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
                           <span style={{ fontSize: '0.65rem', color: '#8b8fa8', marginTop: '1px' }}>vence em {formatDataBR(invest.data_vencimento)}</span>
                         </div>
                         <span style={{ ...colValStyle, fontWeight: 500, fontSize: '0.72rem' }}>{formatBRL(invest.venceBruto)}</span>
-                        <span style={{ ...colValStyle, fontWeight: 500, fontSize: '0.72rem' }}>{formatBRL(invest.venceLiquido)}</span>
+                        <span style={{ ...colValLiquidoStyle, fontWeight: 700, fontSize: '0.72rem' }}>{formatBRL(invest.venceLiquido)}</span>
                       </div>
                     ))}
                   </div>

@@ -2,32 +2,36 @@
 import React from 'react';
 import { ResponsiveGridLayout } from 'react-grid-layout';
 import { Lock, FileText, BarChart3, Settings2, X } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell, BarChart, Bar, ComposedChart, Line } from 'recharts';
+import { Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell, BarChart, Bar, ComposedChart, Line } from 'recharts';
 import { FgcDetalhe } from './FgcDetalhe';
 import { InvestimentosAVencerV3 } from './InvestimentosAVencerV3';
 import { ResumoAnualChartV2 } from './ResumoAnualChartV2';
 import { DistribuicaoInstituicoes } from './DistribuicaoInstituicoes';
+import { FitText } from './FitText';
 
-function formatTaxaKpi(taxa: number) {
-  return taxa.toFixed(2).replace('.', ',');
-}
-function nomeInvestimentoKpi(inv: any) {
-  return `${inv.tipo} ${inv.emissor} ${inv.indexador_tipo} - ${formatTaxaKpi(inv.taxa)}%`;
+function formatDataBRKpi(iso: string) {
+  const [y, m, d] = iso.slice(0, 10).split('-');
+  return `${d}/${m}/${y}`;
 }
 
+// Fileira de KPIs fora do react-grid-layout (grade CSS de largura igual, 5 caixas) —
+// mais fácil de balancear espaço do que colunas inteiras do grid arrastável. Cada valor
+// bruto usa FitText (encolhe a fonte em vez de cortar com "...") e ganha uma caixa de
+// destaque com o valor líquido (sem IR — ver regras_matematicas_investimentos.md). O
+// card Cobertura FGC mostra, por instituição em risco: valor aplicado, projeção de
+// vencimento e quanto excedeu o limite (com percentual).
 export function DashboardTopLayout({
-  patrimonioTotal, totalAplicado, rendAcumulado, projVencimento,
-  saldoCaixaMock, instComRisco, formatBRL, CORES,
-  evolutionData, byInstArray, barData, anoVencimentoArray, LIMIT_FGC, investimentosVencendo
+  patrimonioTotal, patrimonioTotalLiquido,
+  totalAplicado,
+  rendAcumulado, rendAcumuladoLiquido,
+  projVencimento, projVencimentoLiquido,
+  instComRisco, formatBRL, CORES,
+  evolutionData, byInstArray, projVencimentoPorBanco, barData, anoVencimentoArray, LIMIT_FGC, investimentosVencendo, datasPorInvestimento
 }: any) {
   const [width, setWidth] = React.useState(1200);
   const [showFgcModal, setShowFgcModal] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
-    // Mede o container INTERNO (sem padding próprio), não a tela inteira — o grid fica
-    // dentro de um wrapper com padding lateral, então usar document.clientWidth faria o
-    // grid calcular colunas para um espaço maior do que o realmente disponível, sobrando
-    // conteúdo para fora do lado direito (cards encostando na borda).
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver((entries) => {
@@ -38,39 +42,20 @@ export function DashboardTopLayout({
     setWidth(el.clientWidth);
     return () => ro.disconnect();
   }, []);
-  
+
   const lgLayout = [
-    { i: 'kpi1', x: 0, y: 0, w: 2, h: 4 },
-    { i: 'kpi2', x: 2, y: 0, w: 2, h: 4 },
-    { i: 'kpi3', x: 4, y: 0, w: 2, h: 4 },
-    { i: 'kpi4', x: 6, y: 0, w: 2, h: 4 },
-    { i: 'kpi5', x: 8, y: 0, w: 2, h: 4 },
-    { i: 'kpi6', x: 10, y: 0, w: 2, h: 4 },
+    { i: 'chartArea', x: 0, y: 0, w: 8, h: 10 },
+    { i: 'chartPie', x: 8, y: 0, w: 4, h: 10 },
 
-    { i: 'chartArea', x: 0, y: 4, w: 8, h: 10 },
-    { i: 'chartPie', x: 8, y: 4, w: 4, h: 10 },
+    { i: 'chartBar', x: 0, y: 10, w: 6, h: 16 },
+    { i: 'saldoList', x: 6, y: 10, w: 6, h: 16 },
 
-    { i: 'chartBar', x: 0, y: 14, w: 6, h: 16 },
-    { i: 'saldoList', x: 6, y: 14, w: 6, h: 16 },
-
-    { i: 'distList', x: 0, y: 30, w: 12, h: 14 }
+    { i: 'distList', x: 0, y: 26, w: 12, h: 14 }
   ];
 
-  // Breakpoints menores precisam de um layout PRÓPRIO e explícito: o react-grid-layout
-  // não sabe reposicionar itens com segurança a partir do layout "lg" quando a largura em
-  // colunas (w) do item excede o número de colunas do breakpoint menor — isso causa
-  // sobreposição de cards. Empilha em coluna única (mobile) ou 2 colunas (tablet estreito).
-  function stackedLayout(cols: number, kpiPerRow: number) {
-    const kpis = ['kpi1', 'kpi2', 'kpi3', 'kpi4', 'kpi5', 'kpi6'];
-    const kpiW = cols / kpiPerRow;
+  function stackedLayout(cols: number) {
     const items: { i: string; x: number; y: number; w: number; h: number }[] = [];
     let y = 0;
-    kpis.forEach((id, idx) => {
-      const col = idx % kpiPerRow;
-      if (col === 0 && idx > 0) y += 4;
-      items.push({ i: id, x: col * kpiW, y, w: kpiW, h: 4 });
-    });
-    y += 4;
     const panels: [string, number][] = [
       ['chartArea', 10], ['chartPie', 10], ['chartBar', 16], ['saldoList', 16], ['distList', 14],
     ];
@@ -83,55 +68,94 @@ export function DashboardTopLayout({
 
   const layouts = {
     lg: lgLayout,
-    md: stackedLayout(10, 2),
-    sm: stackedLayout(6, 2),
-    xs: stackedLayout(4, 1),
-    xxs: stackedLayout(2, 1),
+    md: stackedLayout(10),
+    sm: stackedLayout(6),
+    xs: stackedLayout(4),
+    xxs: stackedLayout(2),
   };
+
+  // Card body vira uma coluna flex que ocupa a altura toda disponível (herdada do
+  // .grid-card, que já é flex-column) e distribui os 3 grupos de informação (valor+
+  // subtítulo / líquido / badge) em espaços equivalentes — em vez de ficarem colados no
+  // topo com um vão vazio embaixo.
+  const kpiCardStyle: React.CSSProperties = { padding: '14px 18px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' };
+  // Fonte do valor principal um pouco menor que o padrão de .text-value-large, para dar
+  // folga às caixas depois que a 2ª linha (líquido) e o card FGC redesenhado ocupam mais
+  // espaço vertical.
+  const kpiValueStyle: React.CSSProperties = { fontSize: 'clamp(0.875rem, 4vw, 1.1875rem)' };
+  // Hierarquia: valor bruto (preto) > rótulo de contexto (kpi-subtitle, cinza) > valor
+  // líquido (destacado em teal, com rótulo e divisor próprios — não é uma legenda, é um
+  // segundo dado relevante) > badge de status (decorativo, menor prioridade).
+  const kpiLiquidoWrapStyle: React.CSSProperties = { padding: '6px 10px', borderRadius: '8px', background: 'rgba(0,166,147,0.14)' };
+  const kpiLiquidoWrapStyle_excedido: React.CSSProperties = { padding: '6px 10px', borderRadius: '8px', background: 'rgba(239,68,68,0.14)' };
+  const kpiLiquidoLabelStyle: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 700, color: '#00a693', textTransform: 'uppercase', letterSpacing: '0.05em' };
+  const kpiLiquidoValueStyle: React.CSSProperties = { fontSize: '0.95rem', fontWeight: 800, color: '#00a693' };
 
   return (
     <div style={{ padding: 'clamp(12px, 4vw, 24px)', maxWidth: '1440px', margin: '0 auto' }}>
-      <div ref={containerRef}>
-      <ResponsiveGridLayout
-        className="layout"
-        width={width}
-        layouts={layouts}
-        // Estes números são calibrados para a largura do CONTEÚDO (já sem o padding do
-        // wrapper, ~48px em telas >= 600px — ver clamp() no style acima), não a largura
-        // total da tela. Por isso são ~48px menores que os breakpoints "nominais" do MD3.
-        breakpoints={{ lg: 1150, md: 950, sm: 690, xs: 430, xxs: 0 }}
-        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-        rowHeight={30}
-        margin={[16, 16]}
-      >
-        {/* KPI 1 */}
-        <div key="kpi1" className="grid-card">
+      {/* Fileira de KPIs: 5 caixas de largura igual, fora da grade arrastável. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+        <div className="grid-card">
           <div className="grid-card-header"><span className="grid-card-title">Patrimônio Total</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div></div>
-          <div style={{ padding: '12px 18px' }}><div className="text-value-large">{formatBRL(patrimonioTotal)}</div><div className="kpi-subtitle">Posição atual</div><div style={{ marginTop: '12px' }}><span className="badge-pill badge-teal">↑ 5.3% s/ aplicado</span></div></div>
+          <div style={kpiCardStyle}>
+            <div>
+              <FitText text={formatBRL(patrimonioTotal)} className="text-value-large" style={kpiValueStyle} />
+              <div className="kpi-subtitle">Posição atual</div>
+            </div>
+            <div style={kpiLiquidoWrapStyle}>
+              <div style={kpiLiquidoLabelStyle}>Líquido</div>
+              <div style={kpiLiquidoValueStyle}>{formatBRL(patrimonioTotalLiquido)}</div>
+            </div>
+            <div><span className="badge-pill badge-teal">↑ 5.3% s/ aplicado</span></div>
+          </div>
         </div>
 
-        <div key="kpi2" className="grid-card">
+        <div className="grid-card">
           <div className="grid-card-header"><span className="grid-card-title">Capital Aplicado</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div></div>
-          <div style={{ padding: '12px 18px' }}><div className="text-value-large">{formatBRL(totalAplicado)}</div><div className="kpi-subtitle">Ativos de renda fixa</div><div style={{ marginTop: '12px' }}><span className="badge-pill badge-yellow">💼 Principal</span></div></div>
+          <div style={kpiCardStyle}>
+            <div>
+              <FitText text={formatBRL(totalAplicado)} className="text-value-large" style={kpiValueStyle} />
+              <div className="kpi-subtitle">Ativos de renda fixa</div>
+            </div>
+            <div style={kpiLiquidoWrapStyle}>
+              <div style={kpiLiquidoLabelStyle}>Líquido</div>
+              <div style={kpiLiquidoValueStyle}>{formatBRL(totalAplicado)}</div>
+            </div>
+            <div><span className="badge-pill badge-yellow">💼 Principal</span></div>
+          </div>
         </div>
 
-        <div key="kpi3" className="grid-card">
+        <div className="grid-card">
           <div className="grid-card-header"><span className="grid-card-title">Rend. Acumulado</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div></div>
-          <div style={{ padding: '12px 18px' }}><div className="text-value-large">{formatBRL(rendAcumulado)}</div><div className="kpi-subtitle">Até hoje</div><div style={{ marginTop: '12px' }}><span className="badge-pill badge-teal">↑ acumulado</span></div></div>
+          <div style={kpiCardStyle}>
+            <div>
+              <FitText text={formatBRL(rendAcumulado)} className="text-value-large" style={kpiValueStyle} />
+              <div className="kpi-subtitle">Até hoje</div>
+            </div>
+            <div style={kpiLiquidoWrapStyle}>
+              <div style={kpiLiquidoLabelStyle}>Líquido</div>
+              <div style={kpiLiquidoValueStyle}>{formatBRL(rendAcumuladoLiquido)}</div>
+            </div>
+            <div><span className="badge-pill badge-teal">↑ acumulado</span></div>
+          </div>
         </div>
 
-        <div key="kpi4" className="grid-card">
+        <div className="grid-card">
           <div className="grid-card-header"><span className="grid-card-title">Proj. Vencimento</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div></div>
-          <div style={{ padding: '12px 18px' }}><div className="text-value-large">{formatBRL(projVencimento)}</div><div className="kpi-subtitle">Rendimento esperado</div><div style={{ marginTop: '12px' }}><span className="badge-pill badge-purple">✨ lucro estimado</span></div></div>
-        </div>
-
-        <div key="kpi5" className="grid-card">
-          <div className="grid-card-header"><span className="grid-card-title">Saldo / Caixa</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div></div>
-          <div style={{ padding: '12px 18px' }}><div className="text-value-large">{formatBRL(saldoCaixaMock)}</div><div className="kpi-subtitle">Liquidez imediata</div><div style={{ marginTop: '12px' }}><span className="badge-pill badge-blue">🏦 disponível</span></div></div>
+          <div style={kpiCardStyle}>
+            <div>
+              <FitText text={formatBRL(projVencimento)} className="text-value-large" style={kpiValueStyle} />
+              <div className="kpi-subtitle">Rendimento esperado</div>
+            </div>
+            <div style={kpiLiquidoWrapStyle}>
+              <div style={kpiLiquidoLabelStyle}>Líquido</div>
+              <div style={kpiLiquidoValueStyle}>{formatBRL(projVencimentoLiquido)}</div>
+            </div>
+            <div><span className="badge-pill badge-purple">✨ lucro estimado</span></div>
+          </div>
         </div>
 
         <div
-          key="kpi6"
           className="grid-card"
           onClick={() => setShowFgcModal(true)}
           style={{
@@ -145,31 +169,71 @@ export function DashboardTopLayout({
             <span className="grid-card-title">Cobertura FGC</span>
             <div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div>
           </div>
-          <div style={{ padding: '12px 18px', display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
+          <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1, justifyContent: instComRisco === 0 ? 'space-between' : undefined }}>
             {instComRisco === 0 ? (
               <>
-                <div className="text-value-large">0 bancos</div>
-                <div className="kpi-subtitle">Acima do Limite de Proteção</div>
-                <div style={{ marginTop: '12px' }}><span className="badge-pill badge-teal">✅ Protegido</span></div>
+                <div>
+                  <div className="text-value-large" style={kpiValueStyle}>0 bancos</div>
+                  <div className="kpi-subtitle">Acima do Limite de Proteção</div>
+                </div>
+                <div><span className="badge-pill badge-teal">✅ Protegido</span></div>
               </>
             ) : (
               <>
-                <div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
-                  {byInstArray.filter((i: any) => i.value >= LIMIT_FGC).map((inst: any) => (
-                    <div key={inst.name} style={{ marginBottom: '6px' }}>
-                      <div style={{ color: '#ef4444', fontWeight: 700, fontSize: '0.9rem' }}>{inst.name}</div>
-                      {inst.investimentos.map((inv: any) => (
-                        <div key={inv.id} style={{ fontSize: '0.68rem', color: '#8b8fa8', lineHeight: 1.4, marginTop: '2px' }}>{nomeInvestimentoKpi(inv)}</div>
-                      ))}
-                    </div>
-                  ))}
+                <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                  {(() => {
+                    const riscoList = byInstArray.filter((i: any) => i.value >= LIMIT_FGC);
+                    return riscoList.map((inst: any) => {
+                      const excedido = inst.value - LIMIT_FGC;
+                      const percentualExcedido = (excedido / LIMIT_FGC) * 100;
+                      const projVencBanco = projVencimentoPorBanco[inst.name] || 0;
+                      // Data de vencimento só faz sentido quando o banco tem exatamente 1
+                      // investimento em risco — com vários, cada um vence numa data diferente,
+                      // então omitimos (pedido do cliente).
+                      const umInvestimento = inst.investimentos.length === 1;
+                      const dataVencUnico = umInvestimento ? datasPorInvestimento[inst.investimentos[0].id]?.dataVencimento : null;
+                      // Mesma ordem de slots dos outros 4 cards (valor primário → subtítulo →
+                      // caixa colorida de destaque). Com um único banco em risco (caso comum),
+                      // o bloco ocupa a altura toda e distribui os 2 grupos em espaços
+                      // equivalentes, igual às outras caixas da fileira.
+                      const single = riscoList.length === 1;
+                      return (
+                      <div key={inst.name} style={single ? { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' } : { marginBottom: '14px' }}>
+                        <div>
+                          <FitText text={inst.name} className="text-value-large" style={{ ...kpiValueStyle, color: '#1a1d27' }} />
+                          <div className="kpi-subtitle">
+                            {formatBRL(inst.valorAplicado)}{dataVencUnico ? ` - vence (${formatDataBRKpi(dataVencUnico)})` : ''}
+                          </div>
+                          <div className="kpi-subtitle" style={{ marginTop: '1px' }}>{formatBRL(projVencBanco)}</div>
+                        </div>
+                        <div style={kpiLiquidoWrapStyle_excedido}>
+                          <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Excedido</div>
+                          <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#ef4444' }}>
+                            {formatBRL(excedido)} <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>({percentualExcedido.toFixed(0)}%)</span>
+                          </div>
+                        </div>
+                      </div>
+                      );
+                    });
+                  })()}
                 </div>
                 <div style={{ marginTop: '8px', flexShrink: 0 }}><span className="badge-pill badge-red">⚠️ Risco Ativo</span></div>
               </>
             )}
           </div>
         </div>
+      </div>
 
+      <div ref={containerRef}>
+      <ResponsiveGridLayout
+        className="layout"
+        width={width}
+        layouts={layouts}
+        breakpoints={{ lg: 1150, md: 950, sm: 690, xs: 430, xxs: 0 }}
+        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+        rowHeight={30}
+        margin={[16, 16]}
+      >
         <div key="chartArea" className="grid-card" style={{ display: 'flex' }}>
           <div className="grid-card-header"><span className="grid-card-title">EVOLUÇÃO PATRIMONIAL ESTIMADA</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><BarChart3 size={14}/></div></div>
           <div style={{ flex: 1, padding: '20px 20px 10px 0', minHeight: 0 }}>
@@ -221,7 +285,7 @@ export function DashboardTopLayout({
 
         <div key="distList" className="grid-card">
            <div className="grid-card-header"><span className="grid-card-title">DISTRIBUIÇÃO POR INSTITUIÇÃO</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
-          <DistribuicaoInstituicoes byInstArray={byInstArray} patrimonioTotal={patrimonioTotal} CORES={CORES} />
+          <DistribuicaoInstituicoes byInstArray={byInstArray} patrimonioTotal={patrimonioTotal} CORES={CORES} datasPorInvestimento={datasPorInvestimento} />
         </div>
 
       </ResponsiveGridLayout>

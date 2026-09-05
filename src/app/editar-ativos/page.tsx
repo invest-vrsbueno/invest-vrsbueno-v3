@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '../../utils/supabase/server';
-import EditarAtivosClient from './EditarAtivosClient';
+import AtivosClient from './AtivosClient';
 
 export default async function EditarAtivosPage() {
   const supabase = await createClient();
@@ -19,7 +19,7 @@ export default async function EditarAtivosPage() {
 
   return (
     <div style={{ width: '100vw', minHeight: '100vh' }}>
-      <EditarAtivosClient initialData={investimentos || []} />
+      <AtivosClient initialData={investimentos || []} />
     </div>
   );
 }

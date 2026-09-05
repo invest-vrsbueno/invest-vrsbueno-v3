@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Calculator, LogOut, ShieldCheck, Pencil, Menu, X } from 'lucide-react';
 import { calculateAsset, generateEvolutionCurve } from '../utils/finance';
 import { createClient } from '../utils/supabase/client';
-import { agruparPorInstituicaoFGC, LIMIT_FGC } from '../utils/fgc';
+import { agruparPorInstituicaoFGC, aliquotaIR, LIMIT_FGC } from '../utils/fgc';
 import { investimentosPorVencimento, agruparPorAnoVencimento } from '../utils/vencimento';
 import { DashboardTopLayout } from '../components/DashboardTopLayout';
 import { ModalSelic } from '../components/Modals';
@@ -41,10 +41,54 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
   const patrimonioTotal = data.reduce((acc, obj) => acc + obj.posicaoHoje, 0);
   const rendAcumulado = data.reduce((acc, obj) => acc + obj.rendimentoAcumulado, 0);
   const projVencimento = data.reduce((acc, obj) => acc + obj.projetadoVencimento, 0);
-  const saldoCaixaMock = 101750;
 
   const byInstArray = useMemo(() => agruparPorInstituicaoFGC(data, TODAY), [data]);
   const instComRisco = byInstArray.filter(i => i.value >= LIMIT_FGC).length;
+
+  // Totais líquidos (sem IR) para a 2ª linha dos KPIs. Patrimônio e Rend. Acumulado
+  // reaproveitam o que agruparPorInstituicaoFGC já calcula (posicaoAtualLiquida /
+  // rendimentoLiquidoSemIR); ver regras_matematicas_investimentos.md — Valor_Liquido = M - IR,
+  // IR = Lucro_Bruto * aliquota regressiva.
+  const patrimonioTotalLiquido = byInstArray.reduce((acc, i) => acc + i.posicaoAtualLiquida, 0);
+  const rendAcumuladoLiquido = byInstArray.reduce((acc, i) => acc + i.rendimentoLiquidoSemIR, 0);
+
+  // Prazo padrão (365 dias) quando não há data_vencimento — mesmo fallback de calculateAsset.
+  function resolveDtVencimento(item: any): Date {
+    return item.data_vencimento ? new Date(item.data_vencimento) : new Date(TODAY.getTime() + 365 * 24 * 60 * 60 * 1000);
+  }
+
+  // Proj. Vencimento líquido: mesma fórmula, mas a alíquota é calculada pelos dias corridos
+  // até o VENCIMENTO (não até hoje) — é o IR que efetivamente incidirá quando o investimento vencer.
+  const projVencimentoLiquido = useMemo(() => {
+    return data.reduce((acc, obj) => {
+      const dtVencimento = resolveDtVencimento(obj);
+      const lucroBrutoVencimento = Math.max(0, obj.projetadoVencimento - obj.aplicado);
+      const aliquota = aliquotaIR(obj.tipo, obj.data_aplicacao, dtVencimento);
+      const irVencimento = lucroBrutoVencimento * aliquota;
+      return acc + (obj.projetadoVencimento - irVencimento);
+    }, 0);
+  }, [data]);
+
+  // Proj. Vencimento por banco, para o card Cobertura FGC.
+  const projVencimentoPorBanco = useMemo(() => {
+    const acc: Record<string, number> = {};
+    for (const obj of data) {
+      const inst = obj.instituicao_agrupadora;
+      acc[inst] = (acc[inst] || 0) + obj.projetadoVencimento;
+    }
+    return acc;
+  }, [data]);
+
+  // Datas por investimento (id -> data_aplicacao/data_vencimento), para o card Cobertura
+  // FGC (data de vencimento quando o banco tem 1 investimento em risco) e para o card
+  // Distribuição por Instituição (colunas Data do Invest. / Data do Vencimento).
+  const datasPorInvestimento = useMemo(() => {
+    const acc: Record<string, { dataAplicacao: string; dataVencimento: string | null }> = {};
+    for (const obj of data) {
+      acc[obj.id] = { dataAplicacao: obj.data_aplicacao, dataVencimento: obj.data_vencimento };
+    }
+    return acc;
+  }, [data]);
 
   const investimentosVencendo = useMemo(() => investimentosPorVencimento(data, TODAY), [data]);
 
@@ -106,7 +150,7 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
 
   const navItems = [
     { key: 'selic', label: 'Calculadora Selic', icon: Calculator, onClick: () => { setShowSelic(true); setMobileMenuOpen(false); } },
-    { key: 'editar', label: 'Editar Ativos', icon: Pencil, href: '/editar-ativos' },
+    { key: 'editar', label: 'Ativos', icon: Pencil, href: '/editar-ativos' },
     { key: 'seguranca', label: 'Segurança', icon: ShieldCheck, href: '/settings' },
     { key: 'sair', label: 'Sair', icon: LogOut, onClick: () => { setMobileMenuOpen(false); handleLogout(); } },
   ];
@@ -150,7 +194,7 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
             <button onClick={() => setShowSelic(true)} style={{ height: '38px', boxSizing: 'border-box', background: '#1f2029', color: '#fff', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Calculadora Selic</button>
-            <a className="btn" href="/editar-ativos" style={{ height: '38px', boxSizing: 'border-box', background: '#3b82f6', color: '#fff', border: '1px solid transparent', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>Editar Ativos</a>
+            <a className="btn" href="/editar-ativos" style={{ height: '38px', boxSizing: 'border-box', background: '#3b82f6', color: '#fff', border: '1px solid transparent', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>Ativos</a>
             <a className="btn" href="/settings" title="Segurança da conta" style={{ height: '38px', boxSizing: 'border-box', background: 'transparent', color: '#e2e4f0', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>Segurança</a>
             <button onClick={handleLogout} title={userEmail} style={{ height: '38px', boxSizing: 'border-box', background: 'transparent', color: '#e2e4f0', border: '1px solid #323546', padding: '0 16px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sair</button>
           </div>
@@ -194,14 +238,16 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
       </div>
 
       {/* ZONE 1 (LIGHT GRID) */}
-      <DashboardTopLayout 
-        patrimonioTotal={patrimonioTotal} totalAplicado={totalAplicado} 
-        rendAcumulado={rendAcumulado} projVencimento={projVencimento}
-        saldoCaixaMock={saldoCaixaMock} instComRisco={instComRisco}
+      <DashboardTopLayout
+        patrimonioTotal={patrimonioTotal} patrimonioTotalLiquido={patrimonioTotalLiquido}
+        totalAplicado={totalAplicado}
+        rendAcumulado={rendAcumulado} rendAcumuladoLiquido={rendAcumuladoLiquido}
+        projVencimento={projVencimento} projVencimentoLiquido={projVencimentoLiquido}
+        instComRisco={instComRisco}
         formatBRL={formatBRL} CORES={CORES}
-        evolutionData={evolutionData} byInstArray={byInstArray}
+        evolutionData={evolutionData} byInstArray={byInstArray} projVencimentoPorBanco={projVencimentoPorBanco}
         barData={barData} anoVencimentoArray={anoVencimentoArray} LIMIT_FGC={LIMIT_FGC}
-        investimentosVencendo={investimentosVencendo}
+        investimentosVencendo={investimentosVencendo} datasPorInvestimento={datasPorInvestimento}
       />
 
       {showSelic && <ModalSelic onClose={() => setShowSelic(false)} />}
