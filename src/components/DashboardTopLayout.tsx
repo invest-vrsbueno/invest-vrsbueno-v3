@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { ResponsiveGridLayout } from 'react-grid-layout';
-import { Lock, FileText, BarChart3, Settings2, X } from 'lucide-react';
+import { FileText, BarChart3, Settings2, X } from 'lucide-react';
 import { Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell, BarChart, Bar, ComposedChart, Line } from 'recharts';
 import { FgcDetalhe } from './FgcDetalhe';
 import { InvestimentosAVencerV3 } from './InvestimentosAVencerV3';
@@ -96,7 +96,7 @@ export function DashboardTopLayout({
       {/* Fileira de KPIs: 5 caixas de largura igual, fora da grade arrastável. */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
         <div className="grid-card">
-          <div className="grid-card-header"><span className="grid-card-title">Patrimônio Total</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div></div>
+          <div className="grid-card-header"><span className="grid-card-title">Patrimônio Total</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><FileText size={14}/></div></div>
           <div style={kpiCardStyle}>
             <div>
               <FitText text={formatBRL(patrimonioTotal)} className="text-value-large" style={kpiValueStyle} />
@@ -111,7 +111,7 @@ export function DashboardTopLayout({
         </div>
 
         <div className="grid-card">
-          <div className="grid-card-header"><span className="grid-card-title">Capital Aplicado</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div></div>
+          <div className="grid-card-header"><span className="grid-card-title">Capital Aplicado</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><FileText size={14}/></div></div>
           <div style={kpiCardStyle}>
             <div>
               <FitText text={formatBRL(totalAplicado)} className="text-value-large" style={kpiValueStyle} />
@@ -126,7 +126,7 @@ export function DashboardTopLayout({
         </div>
 
         <div className="grid-card">
-          <div className="grid-card-header"><span className="grid-card-title">Rend. Acumulado</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div></div>
+          <div className="grid-card-header"><span className="grid-card-title">Rend. Acumulado</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><FileText size={14}/></div></div>
           <div style={kpiCardStyle}>
             <div>
               <FitText text={formatBRL(rendAcumulado)} className="text-value-large" style={kpiValueStyle} />
@@ -141,7 +141,7 @@ export function DashboardTopLayout({
         </div>
 
         <div className="grid-card">
-          <div className="grid-card-header"><span className="grid-card-title">Proj. Vencimento</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div></div>
+          <div className="grid-card-header"><span className="grid-card-title">Proj. Vencimento</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><FileText size={14}/></div></div>
           <div style={kpiCardStyle}>
             <div>
               <FitText text={formatBRL(projVencimento)} className="text-value-large" style={kpiValueStyle} />
@@ -167,7 +167,7 @@ export function DashboardTopLayout({
         >
           <div className="grid-card-header" style={{ borderBottom: `1px solid ${instComRisco > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}` }}>
             <span className="grid-card-title">Cobertura FGC</span>
-            <div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><FileText size={14}/></div>
+            <div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><FileText size={14}/></div>
           </div>
           <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1, justifyContent: instComRisco === 0 ? 'space-between' : undefined }}>
             {instComRisco === 0 ? (
@@ -235,7 +235,7 @@ export function DashboardTopLayout({
         margin={[16, 16]}
       >
         <div key="chartArea" className="grid-card" style={{ display: 'flex' }}>
-          <div className="grid-card-header"><span className="grid-card-title">EVOLUÇÃO PATRIMONIAL ESTIMADA</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><BarChart3 size={14}/></div></div>
+          <div className="grid-card-header"><span className="grid-card-title">EVOLUÇÃO PATRIMONIAL ESTIMADA</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><BarChart3 size={14}/></div></div>
           <div style={{ flex: 1, padding: '20px 20px 10px 0', minHeight: 0 }}>
              <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={evolutionData}>
@@ -250,7 +250,7 @@ export function DashboardTopLayout({
         </div>
 
         <div key="chartPie" className="grid-card" style={{ display: 'flex' }}>
-          <div className="grid-card-header"><span className="grid-card-title">ALOCAÇÃO %</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/><Settings2 size={14}/></div></div>
+          <div className="grid-card-header"><span className="grid-card-title">ALOCAÇÃO %</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Settings2 size={14}/></div></div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 0 }}>
             <div style={{ height: '220px', flexShrink: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -274,17 +274,17 @@ export function DashboardTopLayout({
         </div>
 
         <div key="chartBar" className="grid-card">
-          <div className="grid-card-header"><span className="grid-card-title">RESUMO ANUAL — VENCIMENTO VS. GERADO</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
+          <div className="grid-card-header"><span className="grid-card-title">RESUMO ANUAL — VENCIMENTO VS. GERADO</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}></div></div>
           <ResumoAnualChartV2 barData={barData} anoVencimentoArray={anoVencimentoArray} formatBRL={formatBRL} />
         </div>
 
         <div key="saldoList" className="grid-card">
-           <div className="grid-card-header"><span className="grid-card-title">INVESTIMENTOS A VENCER</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
+           <div className="grid-card-header"><span className="grid-card-title">INVESTIMENTOS A VENCER</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}></div></div>
           <InvestimentosAVencerV3 investimentos={investimentosVencendo} />
         </div>
 
         <div key="distList" className="grid-card">
-           <div className="grid-card-header"><span className="grid-card-title">DISTRIBUIÇÃO POR INSTITUIÇÃO</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><Lock size={14}/></div></div>
+           <div className="grid-card-header"><span className="grid-card-title">DISTRIBUIÇÃO POR INSTITUIÇÃO</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}></div></div>
           <DistribuicaoInstituicoes byInstArray={byInstArray} patrimonioTotal={patrimonioTotal} CORES={CORES} datasPorInvestimento={datasPorInvestimento} />
         </div>
 
