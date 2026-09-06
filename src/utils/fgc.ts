@@ -30,6 +30,8 @@ export interface InvestimentoFGC {
   rendimentoBruto: number;
   rendimentoLiquidoSemIR: number;
   posicaoAtualLiquida: number;
+  projecaoBruta: number;
+  projecaoLiquida: number;
 }
 
 export interface InstituicaoFGC {
@@ -39,7 +41,15 @@ export interface InstituicaoFGC {
   rendimentoBruto: number;
   rendimentoLiquidoSemIR: number;
   posicaoAtualLiquida: number;
+  projecaoBruta: number;
+  projecaoLiquida: number;
+  margemFgc: number;
   investimentos: InvestimentoFGC[];
+}
+
+// Prazo padrão (365 dias) quando não há data_vencimento — mesmo fallback de calculateAsset/DashboardClient.
+function resolveDtVencimento(obj: any, hoje: Date): Date {
+  return obj.data_vencimento ? new Date(obj.data_vencimento) : new Date(hoje.getTime() + 365 * 24 * 60 * 60 * 1000);
 }
 
 export function agruparPorInstituicaoFGC(dataEnriquecida: any[], hoje: Date = new Date()): InstituicaoFGC[] {
@@ -48,7 +58,7 @@ export function agruparPorInstituicaoFGC(dataEnriquecida: any[], hoje: Date = ne
   for (const obj of dataEnriquecida) {
     const inst = obj.instituicao_agrupadora;
     if (!acc[inst]) {
-      acc[inst] = { name: inst, value: 0, valorAplicado: 0, rendimentoBruto: 0, rendimentoLiquidoSemIR: 0, posicaoAtualLiquida: 0, investimentos: [] };
+      acc[inst] = { name: inst, value: 0, valorAplicado: 0, rendimentoBruto: 0, rendimentoLiquidoSemIR: 0, posicaoAtualLiquida: 0, projecaoBruta: 0, projecaoLiquida: 0, margemFgc: 0, investimentos: [] };
     }
 
     const rendimentoBruto: number = obj.rendimentoAcumulado ?? Math.max(0, obj.posicaoHoje - obj.aplicado);
@@ -58,11 +68,20 @@ export function agruparPorInstituicaoFGC(dataEnriquecida: any[], hoje: Date = ne
     // Posição atual líquida = posição atual (aplicado + rendimento bruto) menos o IR devido sobre o rendimento.
     const posicaoAtualLiquida = obj.posicaoHoje - rendimentoBruto * aliquota;
 
+    // Projeção no vencimento: IR calculado pelos dias corridos até o VENCIMENTO (não até hoje).
+    const projecaoBruta: number = obj.projetadoVencimento;
+    const dtVencimento = resolveDtVencimento(obj, hoje);
+    const rendimentoBrutoVencimento = Math.max(0, projecaoBruta - obj.aplicado);
+    const aliquotaVencimento = aliquotaIR(obj.tipo, obj.data_aplicacao, dtVencimento);
+    const projecaoLiquida = projecaoBruta - rendimentoBrutoVencimento * aliquotaVencimento;
+
     acc[inst].value += obj.posicaoHoje;
     acc[inst].valorAplicado += obj.aplicado;
     acc[inst].rendimentoBruto += rendimentoBruto;
     acc[inst].rendimentoLiquidoSemIR += rendimentoLiquidoSemIR;
     acc[inst].posicaoAtualLiquida += posicaoAtualLiquida;
+    acc[inst].projecaoBruta += projecaoBruta;
+    acc[inst].projecaoLiquida += projecaoLiquida;
 
     acc[inst].investimentos.push({
       id: obj.id,
@@ -75,7 +94,14 @@ export function agruparPorInstituicaoFGC(dataEnriquecida: any[], hoje: Date = ne
       rendimentoBruto,
       rendimentoLiquidoSemIR,
       posicaoAtualLiquida,
+      projecaoBruta,
+      projecaoLiquida,
     });
+  }
+
+  // Margem P/FGC: quanto falta (ou quanto passou) do limite de R$ 250 mil de saldo bruto por instituição.
+  for (const instituicao of Object.values(acc)) {
+    instituicao.margemFgc = LIMIT_FGC - instituicao.value;
   }
 
   return Object.values(acc).sort((a, b) => b.value - a.value);

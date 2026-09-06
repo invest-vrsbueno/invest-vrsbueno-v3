@@ -16,12 +16,12 @@ export function montarHtmlVencimento(investimentos: InvestimentoVencendo[], isTe
     .map(
       (i, idx) => `
       <tr>
-        <td style="padding:12px 0;${idx > 0 ? 'border-top:1px solid #fde68a;' : ''}">
+        <td style="padding:12px 0;${idx > 0 ? 'border-top:1px solid rgba(249,115,22,0.18);' : ''}">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td>
                 <div style="font-weight:700;font-size:13.5px;color:#1a1d27;">${i.emissor} <span style="font-weight:500;color:#8b8fa8;">(${i.tipo})</span></div>
-                <div style="font-size:11.5px;color:#92400e;margin-top:2px;">${i.instituicao_agrupadora} · vence em ${formatDataBR(i.data_vencimento)} (${i.diasRestantes === 0 ? 'hoje' : `${i.diasRestantes}d`})</div>
+                <div style="font-size:11.5px;color:#c2410c;font-weight:600;margin-top:2px;">${i.instituicao_agrupadora} · vence em ${formatDataBR(i.data_vencimento)} (${i.diasRestantes === 0 ? 'hoje' : `${i.diasRestantes}d`})</div>
               </td>
               <td align="right" style="font-weight:700;font-size:13.5px;color:#1a1d27;white-space:nowrap;vertical-align:top;">${formatBRL(i.posicaoHoje)}</td>
             </tr>
@@ -32,14 +32,14 @@ export function montarHtmlVencimento(investimentos: InvestimentoVencendo[], isTe
     .join('');
 
   const cardConteudo = `
-    <div style="border:1px solid #fde68a;background:#fffbeb;border-radius:10px;padding:6px 18px;">
+    <div style="border:1px solid rgba(249,115,22,0.18);background:rgba(249,115,22,0.08);border-radius:10px;padding:6px 18px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${linhas}</table>
     </div>`;
 
   return montarEmailBase({
     badgeLabel: '⏰ VENCIMENTO PRÓXIMO',
     badgeBg: '#fef3c7',
-    badgeColor: '#92400e',
+    badgeColor: '#f97316',
     titulo: 'Investimentos próximos do vencimento',
     introducao: `Os investimentos abaixo vencem em até ${DIAS_ALERTA_VENCIMENTO} dias:`,
     conteudoHtml: cardConteudo,

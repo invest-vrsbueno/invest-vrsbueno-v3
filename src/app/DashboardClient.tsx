@@ -69,16 +69,6 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
     }, 0);
   }, [data]);
 
-  // Proj. Vencimento por banco, para o card Cobertura FGC.
-  const projVencimentoPorBanco = useMemo(() => {
-    const acc: Record<string, number> = {};
-    for (const obj of data) {
-      const inst = obj.instituicao_agrupadora;
-      acc[inst] = (acc[inst] || 0) + obj.projetadoVencimento;
-    }
-    return acc;
-  }, [data]);
-
   // Datas por investimento (id -> data_aplicacao/data_vencimento), para o card Cobertura
   // FGC (data de vencimento quando o banco tem 1 investimento em risco) e para o card
   // Distribuição por Instituição (colunas Data do Invest. / Data do Vencimento).
@@ -245,7 +235,7 @@ export default function DashboardClient({ initialData, userEmail }: { initialDat
         projVencimento={projVencimento} projVencimentoLiquido={projVencimentoLiquido}
         instComRisco={instComRisco}
         formatBRL={formatBRL} CORES={CORES}
-        evolutionData={evolutionData} byInstArray={byInstArray} projVencimentoPorBanco={projVencimentoPorBanco}
+        evolutionData={evolutionData} byInstArray={byInstArray}
         barData={barData} anoVencimentoArray={anoVencimentoArray} LIMIT_FGC={LIMIT_FGC}
         investimentosVencendo={investimentosVencendo} datasPorInvestimento={datasPorInvestimento}
       />

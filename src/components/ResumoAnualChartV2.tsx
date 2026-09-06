@@ -1,9 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ResponsiveContainer, BarChart, XAxis, Tooltip, Bar, Legend } from 'recharts';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import type { AnoVencimento, InvestimentoAno } from '../utils/vencimento';
+import { useColumnOrder } from '../hooks/useColumnOrder';
+import { orderedMeta, useColumnDrag, useColumnSort, compareValues, DraggableHeaderCell, SortableIdentityLabel, type ColumnMeta } from './DraggableColumns';
+
+function formatBRL(val: number) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
+}
 
 const colHeaderStyle: React.CSSProperties = { textAlign: 'right', fontSize: '0.68rem', fontWeight: 700, color: '#8b8fa8', textTransform: 'uppercase', padding: '0 4px' };
 const colValStyle: React.CSSProperties = { textAlign: 'right', fontSize: '0.8rem', fontWeight: 600, padding: '0 4px', whiteSpace: 'nowrap' };
@@ -24,9 +30,52 @@ function nomeInvestimento(invest: InvestimentoAno) {
   return `${invest.tipo} ${invest.emissor} ${invest.indexador_tipo} - ${formatTaxa(invest.taxa)}%`;
 }
 
-export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: { barData: any[]; anoVencimentoArray: AnoVencimento[]; formatBRL: (v: number) => string }) {
+const IDENTITY_WIDTH = '1.6fr';
+const COLUMN_META: ColumnMeta[] = [
+  { key: 'venceBruto', label: 'Vence Bruto', width: '1fr' },
+  { key: 'venceLiquido', label: 'Vence Líquido', width: '1fr' },
+];
+const DEFAULT_ORDER = COLUMN_META.map((c) => c.key);
+
+type SortKey = 'ano' | 'venceBruto' | 'venceLiquido';
+
+// Só a linha do ano é ordenável — instituição/investimento dentro de um ano expandido
+// mantêm a ordem natural.
+function sortValue(key: SortKey, ano: AnoVencimento): number | string {
+  switch (key) {
+    case 'ano':
+      return parseInt(ano.name, 10);
+    case 'venceBruto':
+      return ano.venceBruto;
+    case 'venceLiquido':
+      return ano.venceLiquido;
+  }
+}
+
+function renderValueCell(key: string, bruto: number, liquido: number, extraBruto: React.CSSProperties | undefined, extraLiquido: React.CSSProperties | undefined, formatBRL: (v: number) => string): React.ReactNode {
+  switch (key) {
+    case 'venceBruto':
+      return <span style={{ ...colValStyle, ...extraBruto }}>{formatBRL(bruto)}</span>;
+    case 'venceLiquido':
+      return <span style={{ ...colValLiquidoStyle, ...extraLiquido }}>{formatBRL(liquido)}</span>;
+    default:
+      return null;
+  }
+}
+
+export function ResumoAnualChartV2({ barData, anoVencimentoArray }: { barData: any[]; anoVencimentoArray: AnoVencimento[] }) {
   const [anoAberto, setAnoAberto] = useState<string | null>(null);
   const [instAberta, setInstAberta] = useState<string | null>(null);
+  const { order, reorder } = useColumnOrder('resumo-anual', DEFAULT_ORDER);
+  const cols = orderedMeta(COLUMN_META, order);
+  const { draggedKey, onDragStart, onDragOver, onDrop } = useColumnDrag(order, reorder);
+  const { sortField, sortDir, toggleSort } = useColumnSort<SortKey>();
+  const gridCols = `${IDENTITY_WIDTH} ${cols.map((c) => c.width).join(' ')}`;
+
+  const anosOrdenados = useMemo(() => {
+    if (!sortField) return anoVencimentoArray;
+    return [...anoVencimentoArray].sort((a, b) => compareValues(sortValue(sortField, a), sortValue(sortField, b), sortDir));
+  }, [anoVencimentoArray, sortField, sortDir]);
 
   return (
     <>
@@ -43,26 +92,43 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
       </div>
 
       <div style={{ padding: '0 16px', overflowY: 'auto', flex: 1, minHeight: 0 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '4px', padding: '8px 4px', borderBottom: '2px solid #e2e4f0', position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
-          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#8b8fa8', textTransform: 'uppercase' }}>Ano</span>
-          <span style={colHeaderStyle}>Vence Bruto</span>
-          <span style={colHeaderStyle}>Vence Líquido</span>
+        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '4px', padding: '8px 4px', borderBottom: '2px solid rgba(139,143,168,0.35)', position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
+          <SortableIdentityLabel
+            label="Ano"
+            sortDir={sortField === 'ano' ? sortDir : null}
+            onSortClick={() => toggleSort('ano')}
+            style={{ fontSize: '0.68rem', fontWeight: 700, color: '#8b8fa8', textTransform: 'uppercase' }}
+          />
+          {cols.map((col) => (
+            <DraggableHeaderCell
+              key={col.key}
+              col={col}
+              isDragging={draggedKey === col.key}
+              onDragStart={() => onDragStart(col.key)}
+              onDragOver={onDragOver}
+              onDrop={() => onDrop(col.key)}
+              sortDir={sortField === col.key ? sortDir : null}
+              onSortClick={() => toggleSort(col.key as SortKey)}
+              style={colHeaderStyle}
+            />
+          ))}
         </div>
 
-        {anoVencimentoArray.map((ano) => {
+        {anosOrdenados.map((ano) => {
           const anoIsOpen = anoAberto === ano.name;
           return (
             <div key={ano.name}>
               <div
                 onClick={() => { setAnoAberto(anoIsOpen ? null : ano.name); setInstAberta(null); }}
-                style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '4px', alignItems: 'center', padding: '10px 4px', borderBottom: '1px solid #e2e4f0', cursor: 'pointer' }}
+                style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '4px', alignItems: 'center', padding: '10px 4px', borderBottom: '1px solid rgba(139,143,168,0.25)', cursor: 'pointer' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ color: '#00bfa5', fontWeight: 700, fontSize: '0.85rem' }}>{ano.name}</span>
                   {anoIsOpen ? <ChevronUp size={16} color="#8b8fa8" /> : <ChevronDown size={16} color="#8b8fa8" />}
                 </div>
-                <span style={colValStyle}>{formatBRL(ano.venceBruto)}</span>
-                <span style={colValLiquidoStyle}>{formatBRL(ano.venceLiquido)}</span>
+                {cols.map((col) => (
+                  <React.Fragment key={col.key}>{renderValueCell(col.key, ano.venceBruto, ano.venceLiquido, undefined, undefined, formatBRL)}</React.Fragment>
+                ))}
               </div>
 
               {anoIsOpen && ano.instituicoes.map((inst) => {
@@ -71,20 +137,21 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
                   <div key={inst.name}>
                     <div
                       onClick={() => setInstAberta(instIsOpen ? null : `${ano.name}-${inst.name}`)}
-                      style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '4px', alignItems: 'center', padding: '8px 4px', borderBottom: '1px solid #e2e4f0', background: '#f8f9fc', cursor: 'pointer' }}
+                      style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '4px', alignItems: 'center', padding: '8px 4px', borderBottom: '1px solid rgba(139,143,168,0.25)', background: '#f8f9fc', cursor: 'pointer' }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingLeft: '15px', borderLeft: '2px solid #d1d5db', marginLeft: '8px', minWidth: 0 }}>
                         <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1a1d27' }}>{inst.name}</span>
                         {instIsOpen ? <ChevronUp size={14} color="#8b8fa8" /> : <ChevronDown size={14} color="#8b8fa8" />}
                       </div>
-                      <span style={{ ...colValStyle, fontSize: '0.78rem' }}>{formatBRL(inst.venceBruto)}</span>
-                      <span style={{ ...colValLiquidoStyle, fontSize: '0.78rem' }}>{formatBRL(inst.venceLiquido)}</span>
+                      {cols.map((col) => (
+                        <React.Fragment key={col.key}>{renderValueCell(col.key, inst.venceBruto, inst.venceLiquido, { fontSize: '0.78rem' }, { fontSize: '0.78rem' }, formatBRL)}</React.Fragment>
+                      ))}
                     </div>
 
                     {instIsOpen && inst.investimentos.map((invest) => (
                       <div
                         key={invest.id}
-                        style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr', gap: '4px', alignItems: 'center', padding: '8px 4px', borderBottom: '1px solid #e2e4f0', background: '#f0f1f7' }}
+                        style={{ display: 'grid', gridTemplateColumns: gridCols, gap: '4px', alignItems: 'center', padding: '8px 4px', borderBottom: '1px solid rgba(139,143,168,0.25)', background: '#f0f1f7' }}
                       >
                         <div style={{ display: 'flex', flexDirection: 'column', paddingLeft: '15px', borderLeft: '2px solid #d1d5db', marginLeft: '24px', minWidth: 0 }}>
                           <span style={{ fontSize: '0.72rem', color: '#1a1d27', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -92,8 +159,9 @@ export function ResumoAnualChartV2({ barData, anoVencimentoArray, formatBRL }: {
                           </span>
                           <span style={{ fontSize: '0.65rem', color: '#8b8fa8', marginTop: '1px' }}>vence em {formatDataBR(invest.data_vencimento)}</span>
                         </div>
-                        <span style={{ ...colValStyle, fontWeight: 500, fontSize: '0.72rem' }}>{formatBRL(invest.venceBruto)}</span>
-                        <span style={{ ...colValLiquidoStyle, fontWeight: 700, fontSize: '0.72rem' }}>{formatBRL(invest.venceLiquido)}</span>
+                        {cols.map((col) => (
+                          <React.Fragment key={col.key}>{renderValueCell(col.key, invest.venceBruto, invest.venceLiquido, { fontWeight: 500, fontSize: '0.72rem' }, { fontWeight: 700, fontSize: '0.72rem' }, formatBRL)}</React.Fragment>
+                        ))}
                       </div>
                     ))}
                   </div>

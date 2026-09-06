@@ -24,32 +24,35 @@ export function montarHtmlSelic({ atual, valorProjetado, dataInicio, dataFinal, 
     .map(
       (p, idx) => `
       <tr>
-        <td style="padding:7px 0;${idx > 0 ? 'border-top:1px solid #e2e4f0;' : ''}font-size:12.5px;color:#1a1d27;">${formatDataBR(p.inicio)} — ${formatDataBR(p.fim)}</td>
-        <td align="right" style="padding:7px 0;${idx > 0 ? 'border-top:1px solid #e2e4f0;' : ''}font-size:12.5px;color:#1a1d27;font-weight:600;">${p.taxa.toFixed(2)}%</td>
-        <td align="right" style="padding:7px 0;${idx > 0 ? 'border-top:1px solid #e2e4f0;' : ''}font-size:11px;color:#8b8fa8;white-space:nowrap;">${p.origem}</td>
+        <td style="padding:7px 0;${idx > 0 ? 'border-top:1px solid rgba(139,143,168,0.25);' : ''}font-size:12.5px;color:#1a1d27;">${formatDataBR(p.inicio)} — ${formatDataBR(p.fim)}</td>
+        <td align="right" style="padding:7px 0;${idx > 0 ? 'border-top:1px solid rgba(139,143,168,0.25);' : ''}font-size:12.5px;color:#1a1d27;font-weight:600;">${p.taxa.toFixed(2)}%</td>
+        <td align="right" style="padding:7px 0;${idx > 0 ? 'border-top:1px solid rgba(139,143,168,0.25);' : ''}font-size:11px;color:#8b8fa8;white-space:nowrap;">${p.origem}</td>
       </tr>`
     )
     .join('');
 
+  // Mesmo padrão dos cards de KPI do dashboard: valor bruto grande (preto) + caixa
+  // líquida em destaque (teal), em vez de um bloco sólido colorido.
   const resultadoHtml =
     resultado && !resultado.gapDetectado
-      ? `<div style="background:#10b981;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
-          <div style="font-size:12.5px;color:#e6fdf5;">Valor projetado em ${formatDataBR(dataFinal)}</div>
-          <div style="font-size:22px;font-weight:800;color:#ffffff;">${formatBRL(resultado.valorFinal)}</div>
-          <div style="font-size:12px;color:#dcfbef;">Rendimento estimado: ${formatBRL(resultado.rendimento)}</div>
-          <div style="height:1px;background:rgba(255,255,255,0.25);margin:12px 0;"></div>
-          <div style="font-size:12.5px;color:#e6fdf5;">Valor projetado líquido (com IR)</div>
-          <div style="font-size:18px;font-weight:800;color:#ffffff;">${formatBRL(resultado.valorFinalLiquido)}</div>
-          <div style="font-size:12px;color:#dcfbef;">Rendimento líquido estimado: ${formatBRL(resultado.rendimentoLiquido)}</div>
+      ? `<div style="border:1px solid rgba(139,143,168,0.35);background:#ffffff;border-radius:10px;padding:18px 20px;margin-bottom:16px;">
+          <div style="font-size:11px;color:#8b8fa8;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Valor projetado em ${formatDataBR(dataFinal)}</div>
+          <div style="font-size:22px;font-weight:800;color:#1a1d27;margin-top:2px;">${formatBRL(resultado.valorFinal)}</div>
+          <div style="font-size:12px;color:#8b8fa8;margin-top:2px;">Rendimento estimado: ${formatBRL(resultado.rendimento)}</div>
+          <div style="margin-top:14px;padding:10px 14px;border-radius:8px;background:rgba(0,166,147,0.14);">
+            <div style="font-size:10.5px;font-weight:700;color:#00a693;text-transform:uppercase;letter-spacing:0.05em;">Líquido (com IR)</div>
+            <div style="font-size:17px;font-weight:800;color:#00a693;">${formatBRL(resultado.valorFinalLiquido)}</div>
+            <div style="font-size:11.5px;color:#00a693;">Rendimento líquido: ${formatBRL(resultado.rendimentoLiquido)}</div>
+          </div>
         </div>`
-      : `<div style="border:1px solid #fecaca;background:#fef2f2;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:12.5px;color:#b91c1c;">
+      : `<div style="border:1px solid rgba(239,68,68,0.18);background:rgba(239,68,68,0.08);border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:12.5px;color:#b91c1c;">
           Projeção incompleta: cobertura de dados disponível apenas até ${resultado?.dataCobertaAte ? formatDataBR(resultado.dataCobertaAte) : '-'}.
         </div>`;
 
   const conteudo = `
-    <div style="border:1px solid #e2e4f0;background:#f9fafb;border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:12.5px;color:#5a5d7a;">
-      Taxa oficial vigente: <strong>${atual ? `${atual.valor.toFixed(2)}%` : '-'}</strong> (BCB${atual ? `, ${formatDataBR(atual.data)}` : ''})<br/>
-      Valor simulado: <strong>${formatBRL(valorProjetado)}</strong> · Período: <strong>${formatDataBR(dataInicio)} a ${formatDataBR(dataFinal)}</strong>
+    <div style="border:1px solid rgba(139,143,168,0.35);background:#f9fafb;border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:12.5px;color:#8b8fa8;">
+      Taxa oficial vigente: <strong style="color:#1a1d27;">${atual ? `${atual.valor.toFixed(2)}%` : '-'}</strong> (BCB${atual ? `, ${formatDataBR(atual.data)}` : ''})<br/>
+      Valor simulado: <strong style="color:#1a1d27;">${formatBRL(valorProjetado)}</strong> · Período: <strong style="color:#1a1d27;">${formatDataBR(dataInicio)} a ${formatDataBR(dataFinal)}</strong>
     </div>
     ${resultadoHtml}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -59,8 +62,8 @@ export function montarHtmlSelic({ atual, valorProjetado, dataInicio, dataFinal, 
 
   return montarEmailBase({
     badgeLabel: '📈 SIMULAÇÃO SELIC',
-    badgeBg: '#dbeafe',
-    badgeColor: '#1d4ed8',
+    badgeBg: '#eff6ff',
+    badgeColor: '#3b82f6',
     titulo: 'Simulador de Projeções — Meta Selic',
     introducao: 'Resumo da simulação gerada no dashboard vrsbueno Invest.',
     conteudoHtml: conteudo,

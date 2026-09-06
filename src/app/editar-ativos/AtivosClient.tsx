@@ -7,20 +7,7 @@ import { ConfirmModal } from '../../components/ConfirmModal';
 import { calculateAsset } from '../../utils/finance';
 import { aliquotaIR } from '../../utils/fgc';
 import { CSV_HEADERS, CSV_HEADERS_IMPORTAVEIS, stringifyCsv, parseCsv, formatDataBRCsv, parseDataBRCsv, parseNumeroCsv } from '../../utils/csvAtivos';
-
-interface Investimento {
-  id: string;
-  tipo: string;
-  emissor: string;
-  indexador_tipo: string;
-  taxa: number;
-  instituicao_agrupadora: string;
-  valor_aplicado: number;
-  data_aplicacao: string;
-  data_vencimento: string | null;
-}
-
-type Rascunho = Omit<Investimento, 'id'>;
+import { createSupabaseAtivosRepo, type AtivosRepo, type Investimento, type Rascunho } from '../../utils/ativosRepo';
 
 const CAMPOS_LABEL: Record<keyof Rascunho, string> = {
   tipo: 'Tipo',
@@ -52,18 +39,26 @@ const formatDataBR = formatDataBRCsv;
 const inputStyle: React.CSSProperties = { width: '100%', padding: '6px 8px', background: 'var(--dark-card)', border: '1px solid var(--dark-border)', color: 'var(--dark-fg)', borderRadius: '5px', fontSize: '0.8rem' };
 const NOVO_ID = '__novo__';
 
+type ModoImportacao = 'adicionar' | 'reescrever';
+
 type Acao =
   | { tipo: 'editar'; id: string; original: Investimento; novo: Rascunho }
   | { tipo: 'remover'; item: Investimento }
   | { tipo: 'adicionar'; novo: Rascunho }
-  | { tipo: 'importar'; itens: Rascunho[] };
+  | { tipo: 'importar'; itens: Rascunho[]; modo: ModoImportacao };
 
-type CampoOrdenavel = keyof Rascunho | 'rendimentoFinal' | 'rendimentoFinalLiquido';
+type CampoOrdenavel = keyof Rascunho | 'projecaoFinal' | 'rendimentoFinal' | 'rendimentoFinalLiquido';
 
 // Prazo padrão (365 dias) quando não há data_vencimento — mesmo fallback do finance.ts,
 // pra manter o líquido do vencimento consistente com o resto do dashboard.
 function resolveDtVencimento(item: Investimento, today: Date): Date {
   return item.data_vencimento ? new Date(item.data_vencimento) : new Date(today.getTime() + 365 * 24 * 60 * 60 * 1000);
+}
+
+function investimentoVencido(dataVencimento: string | null): boolean {
+  if (!dataVencimento) return false;
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  return dataVencimento.slice(0, 10) < hojeISO;
 }
 
 function Th({ label, campo, sortField, sortDir, onSort }: {
@@ -94,15 +89,20 @@ function comRendimentoFinal(item: Investimento, today: Date) {
   const rendimentoFinal = Math.max(0, enriched.projetadoVencimento - enriched.aplicado);
   const aliquota = aliquotaIR(item.tipo, item.data_aplicacao, dtVencimento);
   const rendimentoFinalLiquido = rendimentoFinal - rendimentoFinal * aliquota;
-  return { ...item, rendimentoFinal, rendimentoFinalLiquido };
+  // Projeção Final = Aplicado + Rendimento Final (valor bruto projetado no vencimento).
+  const projecaoFinal = item.valor_aplicado + rendimentoFinal;
+  return { ...item, projecaoFinal, rendimentoFinal, rendimentoFinalLiquido };
 }
 
-export default function AtivosClient({ initialData }: { initialData: Investimento[] }) {
+export default function AtivosClient({ initialData, repo }: { initialData: Investimento[]; repo?: AtivosRepo }) {
   const supabase = createClient();
+  const ativosRepo = useMemo(() => repo ?? createSupabaseAtivosRepo(supabase), [repo]);
   const [data, setData] = useState<Investimento[]>(initialData);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [rascunho, setRascunho] = useState<Rascunho>(RASCUNHO_VAZIO);
   const [acaoConfirmar, setAcaoConfirmar] = useState<Acao | null>(null);
+  const [itensParaImportar, setItensParaImportar] = useState<Rascunho[] | null>(null);
+  const [confirmandoReescrita, setConfirmandoReescrita] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [sortField, setSortField] = useState<CampoOrdenavel | null>(null);
@@ -194,23 +194,24 @@ export default function AtivosClient({ initialData }: { initialData: Investiment
     try {
       if (acaoConfirmar.tipo === 'adicionar') {
         const payload = { ...acaoConfirmar.novo, data_vencimento: acaoConfirmar.novo.data_vencimento || null };
-        const { data: inserido, error } = await supabase.from('investimentos').insert(payload).select().single();
-        if (error) throw error;
-        setData((prev) => [...prev, inserido as Investimento]);
+        const inserido = await ativosRepo.insert(payload);
+        setData((prev) => [...prev, inserido]);
       } else if (acaoConfirmar.tipo === 'editar') {
         const payload = { ...acaoConfirmar.novo, data_vencimento: acaoConfirmar.novo.data_vencimento || null };
-        const { error } = await supabase.from('investimentos').update(payload).eq('id', acaoConfirmar.id);
-        if (error) throw error;
+        await ativosRepo.update(acaoConfirmar.id, payload);
         setData((prev) => prev.map((d) => (d.id === acaoConfirmar.id ? { ...d, ...payload } : d)));
       } else if (acaoConfirmar.tipo === 'remover') {
-        const { error } = await supabase.from('investimentos').delete().eq('id', acaoConfirmar.item.id);
-        if (error) throw error;
+        await ativosRepo.remove(acaoConfirmar.item.id);
         setData((prev) => prev.filter((d) => d.id !== acaoConfirmar.item.id));
       } else if (acaoConfirmar.tipo === 'importar') {
         const payload = acaoConfirmar.itens.map((it) => ({ ...it, data_vencimento: it.data_vencimento || null }));
-        const { data: inseridos, error } = await supabase.from('investimentos').insert(payload).select();
-        if (error) throw error;
-        setData((prev) => [...prev, ...((inseridos as Investimento[]) || [])]);
+        if (acaoConfirmar.modo === 'reescrever') {
+          const novos = await ativosRepo.replaceAll(payload);
+          setData(novos);
+        } else {
+          const inseridos = await ativosRepo.insertMany(payload);
+          setData((prev) => [...prev, ...inseridos]);
+        }
       }
       setAcaoConfirmar(null);
       setEditingId(null);
@@ -326,7 +327,7 @@ export default function AtivosClient({ initialData }: { initialData: Investiment
       });
     }
 
-    setAcaoConfirmar({ tipo: 'importar', itens });
+    setItensParaImportar(itens);
   }
 
   const linhaEditavel = (id: string) => (
@@ -345,6 +346,7 @@ export default function AtivosClient({ initialData }: { initialData: Investiment
       </td>
       <td style={{ padding: '8px' }}><input type="number" step="0.0001" value={rascunho.taxa} onChange={(e) => setRascunho({ ...rascunho, taxa: parseFloat(e.target.value) || 0 })} style={inputStyle} /></td>
       <td style={{ padding: '8px' }}><input type="number" step="0.01" value={rascunho.valor_aplicado} onChange={(e) => setRascunho({ ...rascunho, valor_aplicado: parseFloat(e.target.value) || 0 })} style={inputStyle} /></td>
+      <td style={{ padding: '8px', color: '#4b4e5c', fontSize: '0.75rem' }}>—</td>
       <td style={{ padding: '8px' }}><input type="date" value={rascunho.data_aplicacao} onChange={(e) => setRascunho({ ...rascunho, data_aplicacao: e.target.value })} style={inputStyle} /></td>
       <td style={{ padding: '8px' }}><input type="date" value={rascunho.data_vencimento || ''} onChange={(e) => setRascunho({ ...rascunho, data_vencimento: e.target.value })} style={inputStyle} /></td>
       <td style={{ padding: '8px', color: '#4b4e5c', fontSize: '0.75rem' }}>—</td>
@@ -406,6 +408,7 @@ export default function AtivosClient({ initialData }: { initialData: Investiment
                 <Th label="Indexador" campo="indexador_tipo" sortField={sortField} sortDir={sortDir} onSort={alternarOrdenacao} />
                 <Th label="Taxa" campo="taxa" sortField={sortField} sortDir={sortDir} onSort={alternarOrdenacao} />
                 <Th label="Aplicado" campo="valor_aplicado" sortField={sortField} sortDir={sortDir} onSort={alternarOrdenacao} />
+                <Th label="Projeção Final" campo="projecaoFinal" sortField={sortField} sortDir={sortDir} onSort={alternarOrdenacao} />
                 <Th label="Aplicação" campo="data_aplicacao" sortField={sortField} sortDir={sortDir} onSort={alternarOrdenacao} />
                 <Th label="Vencimento" campo="data_vencimento" sortField={sortField} sortDir={sortDir} onSort={alternarOrdenacao} />
                 <Th label="Rendimento Final" campo="rendimentoFinal" sortField={sortField} sortDir={sortDir} onSort={alternarOrdenacao} />
@@ -415,28 +418,36 @@ export default function AtivosClient({ initialData }: { initialData: Investiment
             </thead>
             <tbody>
               {editingId === NOVO_ID && linhaEditavel(NOVO_ID)}
-              {linhas.map((item) =>
-                editingId === item.id ? (
-                  linhaEditavel(item.id)
-                ) : (
-                  <tr key={item.id} style={{ borderTop: '1px solid var(--dark-border)' }}>
+              {linhas.map((item) => {
+                if (editingId === item.id) return linhaEditavel(item.id);
+                const vencido = investimentoVencido(item.data_vencimento);
+                return (
+                  <tr key={item.id} style={{ borderTop: '1px solid var(--dark-border)', background: vencido ? 'rgba(239,68,68,0.12)' : undefined }}>
                     <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.tipo}</td>
                     <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.emissor}</td>
                     <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.instituicao_agrupadora}</td>
                     <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.indexador_tipo}</td>
                     <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{item.taxa}%</td>
                     <td style={{ color: 'var(--dark-fg)', padding: '10px 8px' }}>{formatBRL(item.valor_aplicado)}</td>
+                    <td style={{ color: 'var(--dark-fg)', padding: '10px 8px', fontWeight: 600 }}>{formatBRL(item.projecaoFinal)}</td>
                     <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>{formatDataBR(item.data_aplicacao)}</td>
-                    <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>{formatDataBR(item.data_vencimento)}</td>
+                    <td style={{ color: '#8b8fa8', padding: '10px 8px' }}>
+                      {formatDataBR(item.data_vencimento)}
+                      {vencido && (
+                        <span style={{ marginLeft: '8px', fontSize: '0.62rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: '#ef4444', color: '#fff', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                          Vencido
+                        </span>
+                      )}
+                    </td>
                     <td style={{ color: '#00d4b8', padding: '10px 8px', fontWeight: 600 }}>{formatBRL(item.rendimentoFinal)}</td>
                     <td style={{ color: '#00d4b8', padding: '10px 8px', fontWeight: 600 }}>{formatBRL(item.rendimentoFinalLiquido)}</td>
-                    <td style={{ padding: '10px 8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, zIndex: 1, background: 'var(--dark-card)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
+                    <td style={{ padding: '10px 8px', whiteSpace: 'nowrap', position: 'sticky', right: 0, zIndex: 1, background: vencido ? '#34222a' : 'var(--dark-card)', boxShadow: '-6px 0 8px -6px rgba(0,0,0,0.5)' }}>
                       <button onClick={() => iniciarEdicao(item)} disabled={editingId !== null} title="Editar" style={{ background: 'transparent', border: '1px solid transparent', borderRadius: '6px', padding: '4px', cursor: editingId !== null ? 'default' : 'pointer', color: '#8b8fa8', marginRight: '10px', opacity: editingId !== null ? 0.4 : 1 }}><Pencil size={16} /></button>
                       <button onClick={() => pedirConfirmacaoRemover(item)} disabled={editingId !== null} title="Remover" style={{ background: 'transparent', border: '1px solid transparent', borderRadius: '6px', padding: '4px', cursor: editingId !== null ? 'default' : 'pointer', color: '#ef4444', opacity: editingId !== null ? 0.4 : 1 }}><Trash2 size={16} /></button>
                     </td>
                   </tr>
-                )
-              )}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -469,8 +480,60 @@ export default function AtivosClient({ initialData }: { initialData: Investiment
         </ConfirmModal>
       )}
 
+      {itensParaImportar && !confirmandoReescrita && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(6,7,10,0.99)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '16px' }}>
+          <div style={{ background: 'var(--dark-popover)', padding: '24px', borderRadius: '12px', width: 'min(440px, 100%)', border: '1px solid var(--dark-border)', color: 'var(--dark-fg)', boxShadow: 'var(--dark-shadow-popover)' }}>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '8px' }}>Como deseja importar?</h2>
+            <p style={{ fontSize: '0.85rem', color: '#8b8fa8', marginBottom: '20px', lineHeight: 1.6 }}>
+              A planilha tem {itensParaImportar.length} linha(s) e as colunas batem com a tabela atual.
+            </p>
+            <button
+              onClick={() => { setAcaoConfirmar({ tipo: 'importar', itens: itensParaImportar, modo: 'adicionar' }); setItensParaImportar(null); }}
+              style={{ width: '100%', textAlign: 'left', padding: '14px', marginBottom: '10px', background: 'var(--dark-card)', border: '1px solid var(--dark-border)', borderRadius: '8px', cursor: 'pointer', color: 'var(--dark-fg)' }}
+            >
+              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Adicionar linhas</div>
+              <div style={{ fontSize: '0.78rem', color: '#8b8fa8', marginTop: '2px' }}>Os {itensParaImportar.length} investimento(s) da planilha entram como novos registros — nada do que já existe é alterado ou removido.</div>
+            </button>
+            <button
+              onClick={() => setConfirmandoReescrita(true)}
+              style={{ width: '100%', textAlign: 'left', padding: '14px', marginBottom: '20px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '8px', cursor: 'pointer', color: 'var(--dark-fg)' }}
+            >
+              <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#ef4444' }}>Reescrever valores do banco</div>
+              <div style={{ fontSize: '0.78rem', color: '#8b8fa8', marginTop: '2px' }}>Apaga todos os {data.length} investimento(s) atuais e substitui pelos {itensParaImportar.length} da planilha.</div>
+            </button>
+            <button
+              onClick={() => setItensParaImportar(null)}
+              style={{ width: '100%', padding: '11px', background: 'transparent', border: '1px solid var(--dark-border)', color: 'var(--dark-fg)', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {confirmandoReescrita && itensParaImportar && (
+        <ConfirmModal
+          titulo="Tem certeza?"
+          onConfirm={() => { setAcaoConfirmar({ tipo: 'importar', itens: itensParaImportar, modo: 'reescrever' }); setConfirmandoReescrita(false); setItensParaImportar(null); }}
+          onCancel={() => setConfirmandoReescrita(false)}
+          corConfirmar="#ef4444"
+          textoConfirmar="Sim, reescrever"
+        >
+          Isso vai <strong>apagar todos os {data.length} investimentos atuais</strong> e substituir pelos {itensParaImportar.length} da planilha. Essa ação não pode ser desfeita.
+        </ConfirmModal>
+      )}
+
       {acaoConfirmar?.tipo === 'importar' && (
-        <ConfirmModal titulo={`Confirmar importação de ${acaoConfirmar.itens.length} investimento(s)`} onConfirm={confirmarAcao} onCancel={() => setAcaoConfirmar(null)} corConfirmar="#3b82f6" textoConfirmar="Importar" carregando={salvando}>
+        <ConfirmModal
+          titulo={acaoConfirmar.modo === 'reescrever'
+            ? `Confirmar reescrita — ${acaoConfirmar.itens.length} investimento(s) vão substituir os ${data.length} atuais`
+            : `Confirmar importação de ${acaoConfirmar.itens.length} investimento(s)`}
+          onConfirm={confirmarAcao}
+          onCancel={() => setAcaoConfirmar(null)}
+          corConfirmar={acaoConfirmar.modo === 'reescrever' ? '#ef4444' : '#3b82f6'}
+          textoConfirmar={acaoConfirmar.modo === 'reescrever' ? 'Reescrever' : 'Importar'}
+          carregando={salvando}
+        >
           <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
             {acaoConfirmar.itens.slice(0, 8).map((it, i) => (
               <div key={i} style={{ marginBottom: '6px' }}>
@@ -481,8 +544,10 @@ export default function AtivosClient({ initialData }: { initialData: Investiment
               <div style={{ color: '#8b8fa8' }}>... e mais {acaoConfirmar.itens.length - 8} investimento(s).</div>
             )}
           </div>
-          <div style={{ marginTop: '12px', color: '#8b8fa8' }}>
-            Esses investimentos serão adicionados como novos registros — nada do que já existe será alterado ou removido.
+          <div style={{ marginTop: '12px', color: acaoConfirmar.modo === 'reescrever' ? '#ef4444' : '#8b8fa8' }}>
+            {acaoConfirmar.modo === 'reescrever'
+              ? `Todos os ${data.length} registros atuais serão removidos e substituídos pelos da planilha. Essa ação não pode ser desfeita.`
+              : 'Esses investimentos serão adicionados como novos registros — nada do que já existe será alterado ou removido.'}
           </div>
         </ConfirmModal>
       )}

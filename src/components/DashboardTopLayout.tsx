@@ -1,32 +1,29 @@
 'use client';
 import React from 'react';
 import { ResponsiveGridLayout } from 'react-grid-layout';
-import { FileText, BarChart3, Settings2, X } from 'lucide-react';
+import { FileText, BarChart3, Settings2, X, AlertTriangle } from 'lucide-react';
 import { Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, PieChart, Pie, Cell, BarChart, Bar, ComposedChart, Line } from 'recharts';
 import { FgcDetalhe } from './FgcDetalhe';
 import { InvestimentosAVencerV3 } from './InvestimentosAVencerV3';
+import { InvestimentosVencidos } from './InvestimentosVencidos';
 import { ResumoAnualChartV2 } from './ResumoAnualChartV2';
 import { DistribuicaoInstituicoes } from './DistribuicaoInstituicoes';
 import { FitText } from './FitText';
-
-function formatDataBRKpi(iso: string) {
-  const [y, m, d] = iso.slice(0, 10).split('-');
-  return `${d}/${m}/${y}`;
-}
 
 // Fileira de KPIs fora do react-grid-layout (grade CSS de largura igual, 5 caixas) —
 // mais fácil de balancear espaço do que colunas inteiras do grid arrastável. Cada valor
 // bruto usa FitText (encolhe a fonte em vez de cortar com "...") e ganha uma caixa de
 // destaque com o valor líquido (sem IR — ver regras_matematicas_investimentos.md). O
-// card Cobertura FGC mostra, por instituição em risco: valor aplicado, projeção de
-// vencimento e quanto excedeu o limite (com percentual).
+// card Cobertura FGC mostra só a contagem de bancos em risco (mesmo formato do estado
+// "Protegido", só trocando a cor) — o detalhamento por instituição fica no modal
+// (FgcDetalhe, aberto ao clicar no card).
 export function DashboardTopLayout({
   patrimonioTotal, patrimonioTotalLiquido,
   totalAplicado,
   rendAcumulado, rendAcumuladoLiquido,
   projVencimento, projVencimentoLiquido,
   instComRisco, formatBRL, CORES,
-  evolutionData, byInstArray, projVencimentoPorBanco, barData, anoVencimentoArray, LIMIT_FGC, investimentosVencendo, datasPorInvestimento
+  evolutionData, byInstArray, barData, anoVencimentoArray, LIMIT_FGC, investimentosVencendo, datasPorInvestimento
 }: any) {
   const [width, setWidth] = React.useState(1200);
   const [showFgcModal, setShowFgcModal] = React.useState(false);
@@ -48,7 +45,8 @@ export function DashboardTopLayout({
     { i: 'chartPie', x: 8, y: 0, w: 4, h: 10 },
 
     { i: 'chartBar', x: 0, y: 10, w: 6, h: 16 },
-    { i: 'saldoList', x: 6, y: 10, w: 6, h: 16 },
+    { i: 'saldoList', x: 6, y: 10, w: 6, h: 8 },
+    { i: 'vencidosList', x: 6, y: 18, w: 6, h: 8 },
 
     { i: 'distList', x: 0, y: 26, w: 12, h: 14 }
   ];
@@ -57,7 +55,7 @@ export function DashboardTopLayout({
     const items: { i: string; x: number; y: number; w: number; h: number }[] = [];
     let y = 0;
     const panels: [string, number][] = [
-      ['chartArea', 10], ['chartPie', 10], ['chartBar', 16], ['saldoList', 16], ['distList', 14],
+      ['chartArea', 10], ['chartPie', 10], ['chartBar', 16], ['saldoList', 8], ['vencidosList', 8], ['distList', 14],
     ];
     panels.forEach(([id, h]) => {
       items.push({ i: id, x: 0, y, w: cols, h });
@@ -87,7 +85,6 @@ export function DashboardTopLayout({
   // líquido (destacado em teal, com rótulo e divisor próprios — não é uma legenda, é um
   // segundo dado relevante) > badge de status (decorativo, menor prioridade).
   const kpiLiquidoWrapStyle: React.CSSProperties = { padding: '6px 10px', borderRadius: '8px', background: 'rgba(0,166,147,0.14)' };
-  const kpiLiquidoWrapStyle_excedido: React.CSSProperties = { padding: '6px 10px', borderRadius: '8px', background: 'rgba(239,68,68,0.14)' };
   const kpiLiquidoLabelStyle: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 700, color: '#00a693', textTransform: 'uppercase', letterSpacing: '0.05em' };
   const kpiLiquidoValueStyle: React.CSSProperties = { fontSize: '0.95rem', fontWeight: 800, color: '#00a693' };
 
@@ -160,66 +157,27 @@ export function DashboardTopLayout({
           onClick={() => setShowFgcModal(true)}
           style={{
             cursor: 'pointer',
-            background: instComRisco > 0 ? 'rgba(239,68,68,0.10)' : 'rgba(16,185,129,0.10)',
-            border: `1px solid ${instComRisco > 0 ? 'rgba(239,68,68,0.35)' : 'rgba(16,185,129,0.35)'}`,
+            background: instComRisco > 0 ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)',
+            border: `1px solid ${instComRisco > 0 ? 'rgba(239,68,68,0.18)' : 'rgba(16,185,129,0.18)'}`,
           }}
           title="Clique para ver o detalhamento por instituição"
         >
-          <div className="grid-card-header" style={{ borderBottom: `1px solid ${instComRisco > 0 ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)'}` }}>
+          <div className="grid-card-header" style={{ borderBottom: `1px solid ${instComRisco > 0 ? 'rgba(239,68,68,0.14)' : 'rgba(16,185,129,0.14)'}` }}>
             <span className="grid-card-title">Cobertura FGC</span>
             <div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><FileText size={14}/></div>
           </div>
-          <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1, justifyContent: instComRisco === 0 ? 'space-between' : undefined }}>
-            {instComRisco === 0 ? (
-              <>
-                <div>
-                  <div className="text-value-large" style={kpiValueStyle}>0 bancos</div>
-                  <div className="kpi-subtitle">Acima do Limite de Proteção</div>
-                </div>
-                <div><span className="badge-pill badge-teal">✅ Protegido</span></div>
-              </>
-            ) : (
-              <>
-                <div style={{ overflowY: 'auto', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                  {(() => {
-                    const riscoList = byInstArray.filter((i: any) => i.value >= LIMIT_FGC);
-                    return riscoList.map((inst: any) => {
-                      const excedido = inst.value - LIMIT_FGC;
-                      const percentualExcedido = (excedido / LIMIT_FGC) * 100;
-                      const projVencBanco = projVencimentoPorBanco[inst.name] || 0;
-                      // Data de vencimento só faz sentido quando o banco tem exatamente 1
-                      // investimento em risco — com vários, cada um vence numa data diferente,
-                      // então omitimos (pedido do cliente).
-                      const umInvestimento = inst.investimentos.length === 1;
-                      const dataVencUnico = umInvestimento ? datasPorInvestimento[inst.investimentos[0].id]?.dataVencimento : null;
-                      // Mesma ordem de slots dos outros 4 cards (valor primário → subtítulo →
-                      // caixa colorida de destaque). Com um único banco em risco (caso comum),
-                      // o bloco ocupa a altura toda e distribui os 2 grupos em espaços
-                      // equivalentes, igual às outras caixas da fileira.
-                      const single = riscoList.length === 1;
-                      return (
-                      <div key={inst.name} style={single ? { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' } : { marginBottom: '14px' }}>
-                        <div>
-                          <FitText text={inst.name} className="text-value-large" style={{ ...kpiValueStyle, color: '#1a1d27' }} />
-                          <div className="kpi-subtitle">
-                            {formatBRL(inst.valorAplicado)}{dataVencUnico ? ` - vence (${formatDataBRKpi(dataVencUnico)})` : ''}
-                          </div>
-                          <div className="kpi-subtitle" style={{ marginTop: '1px' }}>{formatBRL(projVencBanco)}</div>
-                        </div>
-                        <div style={kpiLiquidoWrapStyle_excedido}>
-                          <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Excedido</div>
-                          <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#ef4444' }}>
-                            {formatBRL(excedido)} <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>({percentualExcedido.toFixed(0)}%)</span>
-                          </div>
-                        </div>
-                      </div>
-                      );
-                    });
-                  })()}
-                </div>
-                <div style={{ marginTop: '8px', flexShrink: 0 }}><span className="badge-pill badge-red">⚠️ Risco Ativo</span></div>
-              </>
-            )}
+          <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
+            <div>
+              <div className="text-value-large" style={kpiValueStyle}>{instComRisco} banco{instComRisco === 1 ? '' : 's'}</div>
+              <div className="kpi-subtitle">Acima do Limite de Proteção</div>
+            </div>
+            <div>
+              {instComRisco === 0 ? (
+                <span className="badge-pill badge-teal">✅ Protegido</span>
+              ) : (
+                <span className="badge-pill badge-red">⚠️ Risco Ativo</span>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -233,6 +191,7 @@ export function DashboardTopLayout({
         cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
         rowHeight={30}
         margin={[16, 16]}
+        dragConfig={{ handle: '.grid-card-header' }}
       >
         <div key="chartArea" className="grid-card" style={{ display: 'flex' }}>
           <div className="grid-card-header"><span className="grid-card-title">EVOLUÇÃO PATRIMONIAL ESTIMADA</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}><BarChart3 size={14}/></div></div>
@@ -275,12 +234,19 @@ export function DashboardTopLayout({
 
         <div key="chartBar" className="grid-card">
           <div className="grid-card-header"><span className="grid-card-title">RESUMO ANUAL — VENCIMENTO VS. GERADO</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}></div></div>
-          <ResumoAnualChartV2 barData={barData} anoVencimentoArray={anoVencimentoArray} formatBRL={formatBRL} />
+          <ResumoAnualChartV2 barData={barData} anoVencimentoArray={anoVencimentoArray} />
         </div>
 
         <div key="saldoList" className="grid-card">
            <div className="grid-card-header"><span className="grid-card-title">INVESTIMENTOS A VENCER</span><div style={{ display: 'flex', gap: '6px', color: '#c4c8d8' }}></div></div>
           <InvestimentosAVencerV3 investimentos={investimentosVencendo} />
+        </div>
+
+        <div key="vencidosList" className="grid-card" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}>
+           <div className="grid-card-header" style={{ borderBottom: '1px solid rgba(239,68,68,0.14)' }}>
+             <span className="grid-card-title" style={{ color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '6px' }}><AlertTriangle size={12} /> INVESTIMENTOS VENCIDOS</span>
+           </div>
+          <InvestimentosVencidos investimentos={investimentosVencendo} />
         </div>
 
         <div key="distList" className="grid-card">
@@ -291,32 +257,43 @@ export function DashboardTopLayout({
       </ResponsiveGridLayout>
       </div>
 
-      {showFgcModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(6,7,10,0.99)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }} onClick={() => setShowFgcModal(false)}>
-          <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: 'min(640px, 100%)', maxHeight: '85vh', overflowY: 'auto', border: '1px solid #d1d5db' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span className="grid-card-title">COBERTURA FGC POR INSTITUIÇÃO</span>
-              <button onClick={() => setShowFgcModal(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#8b8fa8' }}><X size={20} /></button>
+      {showFgcModal && (() => {
+        // Bancos em alarme (acima do limite FGC) sempre no topo — dentro de cada grupo
+        // (em alarme / dentro do limite), maior valor primeiro. Cópia à parte: não afeta a
+        // ordem usada pelo gráfico "Alocação %" nem pela Distribuição por Instituição.
+        const byInstArrayModal = [...byInstArray].sort((a: any, b: any) => {
+          const aRisco = a.value >= LIMIT_FGC ? 1 : 0;
+          const bRisco = b.value >= LIMIT_FGC ? 1 : 0;
+          if (aRisco !== bRisco) return bRisco - aRisco;
+          return b.value - a.value;
+        });
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(6,7,10,0.99)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }} onClick={() => setShowFgcModal(false)}>
+            <div style={{ background: '#fff', padding: '24px', borderRadius: '12px', width: 'min(640px, 100%)', maxHeight: '85vh', overflowY: 'auto', border: '1px solid #d1d5db' }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <span className="grid-card-title">COBERTURA FGC POR INSTITUIÇÃO</span>
+                <button onClick={() => setShowFgcModal(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#8b8fa8' }}><X size={20} /></button>
+              </div>
+              <div style={{ height: `${Math.max(220, byInstArrayModal.length * 34)}px` }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={byInstArrayModal} layout="vertical" barSize={16} barCategoryGap="35%">
+                    <XAxis type="number" tickFormatter={(v)=>`${v/1000}k`} tick={{fontSize:10, fill:'#8b8fa8'}} axisLine={false} tickLine={false} />
+                    <YAxis type="category" dataKey="name" tick={{fontSize:9, fill:'#1a1d27', fontWeight: 600}} axisLine={false} tickLine={false} width={110} interval={0} />
+                    <Tooltip formatter={(value: any) => formatBRL(Number(value))} cursor={{fill: 'rgba(0,0,0,0.02)'}} />
+                    <ReferenceLine x={LIMIT_FGC} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Limite FGC', fill: '#ef4444', fontSize: 9 }} />
+                    <Bar dataKey="value">
+                      {byInstArrayModal.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={entry.value >= LIMIT_FGC ? '#ef4444' : '#00bfa5'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <FgcDetalhe byInstArray={byInstArrayModal} LIMIT_FGC={LIMIT_FGC} />
             </div>
-            <div style={{ height: `${Math.max(220, byInstArray.length * 34)}px` }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={byInstArray} layout="vertical" barSize={16} barCategoryGap="35%">
-                  <XAxis type="number" tickFormatter={(v)=>`${v/1000}k`} tick={{fontSize:10, fill:'#8b8fa8'}} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" tick={{fontSize:9, fill:'#1a1d27', fontWeight: 600}} axisLine={false} tickLine={false} width={110} interval={0} />
-                  <Tooltip formatter={(value: any) => formatBRL(Number(value))} cursor={{fill: 'rgba(0,0,0,0.02)'}} />
-                  <ReferenceLine x={LIMIT_FGC} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Limite FGC', fill: '#ef4444', fontSize: 9 }} />
-                  <Bar dataKey="value">
-                    {byInstArray.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={entry.value >= LIMIT_FGC ? '#ef4444' : '#00bfa5'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <FgcDetalhe byInstArray={byInstArray} LIMIT_FGC={LIMIT_FGC} />
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
